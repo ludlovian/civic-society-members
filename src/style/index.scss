@@ -1,0 +1,31 @@
+$mdc-theme-primary: #3a4c7a;
+$mdc-theme-background: #e8ecf0;
+$mdc-theme-surface: #fff;
+
+@import url(https://fonts.googleapis.com/icon?family=Material+Icons);
+@import "@material/button/mdc-button";
+@import "@material/card/mdc-card";
+@import "@material/drawer/mdc-drawer";
+@import "@material/floating-label/mdc-floating-label";
+@import "@material/layout-grid/mdc-layout-grid";
+@import "@material/list/mdc-list";
+@import "@material/notched-outline/mdc-notched-outline";
+@import "@material/ripple/mdc-ripple";
+@import "@material/select/mdc-select";
+@import "@material/tab-bar/mdc-tab-bar";
+@import "@material/tab-scroller/mdc-tab-scroller";
+@import "@material/tab-indicator/mdc-tab-indicator";
+@import "@material/tab/mdc-tab";
+@import "@material/textfield/mdc-text-field";
+@import "@material/textfield/helper-text/mdc-text-field-helper-text";
+@import "@material/top-app-bar/mdc-top-app-bar";
+@import "@material/typography/mdc-typography";
+
+body {
+  margin: 0;
+  background: $mdc-theme-background;
+}
+
+a {
+  text-decoration: none;
+}
