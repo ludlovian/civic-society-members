@@ -1,0 +1,56 @@
+{
+  "private": true,
+  "name": "lcs-members",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "start": "rm -rf dist/ && parcel serve --no-cache --port 8080 src/index.html",
+    "build": "rm -rf dist/ && parcel build --no-cache src/index.html",
+    "lint": "eslint src"
+  },
+  "eslintConfig": {
+    "parser": "babel-eslint",
+    "parserOptions": {
+      "jsx": true,
+      "experimentalObjectRestSpread": true
+    },
+    "extends": [
+      "standard"
+    ]
+  },
+  "eslintIgnore": [
+    "build/*"
+  ],
+  "devDependencies": {
+    "autoprefixer": "^9.4.7",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.12.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^8.0.1",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "parcel-bundler": "^1.11.0",
+    "sass": "^1.16.1"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.2.5",
+    "@material/button": "^0.43.0",
+    "@material/card": "^0.43.0",
+    "@material/drawer": "^0.43.0",
+    "@material/floating-label": "^0.43.0",
+    "@material/layout-grid": "^0.41.0",
+    "@material/list": "^0.43.0",
+    "@material/notched-outline": "^0.43.0",
+    "@material/ripple": "^0.43.0",
+    "@material/select": "^0.43.0",
+    "@material/tab-bar": "^0.43.0",
+    "@material/textfield": "^0.43.0",
+    "@material/top-app-bar": "^0.43.0",
+    "@material/typography": "^0.43.0",
+    "dayjs": "^1.8.0",
+    "lodash": "^4.17.11",
+    "lz-string": "^1.4.4",
+    "mithril": "^2.0.0-rc"
+  }
+}
