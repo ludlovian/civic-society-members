@@ -1,7 +1,7 @@
 {
   "name": "Ludlow Civic Society",
-  "short_name": "lcs-members",
-  "start_url": "/",
+  "short_name": "lCS Members",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#fff",

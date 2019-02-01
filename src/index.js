@@ -19,5 +19,5 @@ if (store.auth.isSignedIn() && !store.members.wasLoadedRecently()) {
   store.members.fetchMembers()
 }
 
-m.route.prefix('')
+m.route.prefix('/civic-society-members')
 m.route(document.body, '/', routes)

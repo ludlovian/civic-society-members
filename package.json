@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "rm -rf dist/ && parcel serve --no-cache --port 8080 src/index.html",
-    "build": "rm -rf dist/ && parcel build --no-cache src/index.html",
+    "start": "rm -rf dist/ && parcel serve --no-cache --public-url /civic-society-members/ --port 8080 src/index.html",
+    "build": "rm -rf dist/ && parcel build --no-cache --public-url /civic-society-members/ src/index.html",
     "lint": "eslint src"
   },
   "eslintConfig": {
