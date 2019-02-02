@@ -6,12 +6,12 @@ import Card from '../components/Material/Card'
 import Button from '../components/Material/Button'
 
 import store from '../store'
-import valoo from '../lib/valoo'
 import classify from '../lib/classify'
 import stylish from '../lib/stylish'
 import { FormState, FieldState, validators, formatters, parsers } from '../lib/formstate'
 import Field from '../components/Field'
 import pdsp from '../lib/pdsp'
+import { getRoute, setRoute } from '../lib/routeutil'
 import schema from '../schema'
 
 const { required } = validators
@@ -34,21 +34,22 @@ function MemberDetails () {
     .buttons { justify-content: flex-end; }
     .buttons>.mdc-button { margin-left: 12px; }
   `
-  let editing = valoo(false)
-  editing.on(m.redraw)
-
   let form
   let member
 
   function onedit (e) {
     pdsp(e)
-    editing(true)
+    const route = getRoute()
+    route.query.edit = ''
+    setRoute(route)
   }
 
   function oncancel (e) {
     pdsp(e)
     form.set(member)
-    editing(false)
+    const route = getRoute()
+    delete route.query.edit
+    setRoute(route)
   }
 
   async function onsave (e) {
@@ -57,19 +58,21 @@ function MemberDetails () {
     if (form.hasError) return
     const patch = form.getChanges()
     store.members.updateMember(member, patch)
-    editing(false)
+    const route = getRoute()
+    delete route.query.edit
+    setRoute(route)
   }
 
   return {
     oninit ({ attrs }) {
       member = attrs.member
       form = getForm(member)
-      if (!member.sortName) editing(true)
     },
 
     view ({ attrs }) {
       member = attrs.member
-      const isEditing = editing()
+      const route = getRoute()
+      const isEditing = 'edit' in route.query
       if (!isEditing) form.set(member)
 
       return classify(
@@ -78,6 +81,7 @@ function MemberDetails () {
           m('form',
             m(Field, {
               className: 'field',
+              id: 'sortName',
               label: 'Sort name',
               fieldState: form.$.sortName,
               disabled: !isEditing

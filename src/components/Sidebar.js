@@ -55,7 +55,7 @@ function buildList (isSignedIn, url) {
   }
   const list = []
   let selected
-  list.push({ text: 'Members', icon: 'people', href: '/members' })
+  list.push({ text: 'Members', icon: 'people', href: '/' })
   if (/^\/member\/\d+$/.test(url)) {
     list.push({ text: 'Member details', icon: 'person', href: url })
     selected = 1

@@ -13,8 +13,11 @@ import MemberPayments from '../components/MemberPayments'
 import store from '../store'
 import stylish from '../lib/stylish'
 import classify from '../lib/classify'
+import { getRoute, setRoute } from '../lib/routeutil'
 
 // const MemberDetails = { view: () => m(Typography.Headline6, 'Details') }
+
+const TABS = 'Details Payments Files'.split(' ')
 
 export default
 function Member () {
@@ -24,19 +27,32 @@ function Member () {
   `
 
   return {
-    oninit ({ attrs: { id } }) {
-      if (id === 'new') {
-        const member = store.members.getNewMember()
-        m.route.set(`/member/${member.id}`, null, { replace: true })
-      }
-    },
-
     oncreate () {
       store.members.ensureFilesLoaded()
     },
 
     view ({ attrs: { id } }) {
+      if (id === 'new') {
+        const member = store.members.getNewMember()
+        setRoute(
+          {
+            path: '/member/' + member.id,
+            query: { tab: 'details', edit: '' }
+          },
+          { replace: true }
+        )
+        return false
+      }
+
       const member = store.members.getMember(id)
+      const route = getRoute()
+      const tab = TABS.find(t => t.toLowerCase() === route.query.tab) || TABS[0]
+
+      function ontabchange (tab) {
+        const route = getRoute()
+        route.query.tab = tab.toLowerCase()
+        setRoute(route)
+      }
 
       return classify(
         stylish(style),
@@ -55,6 +71,7 @@ function Member () {
               ),
 
               m(TabBar.AutoTab,
+                { tab, ontabchange },
                 m(MemberDetails, { member, tab: 'Details' }),
                 m(MemberPayments, { member, tab: 'Payments' }),
                 m(MemberFiles, { member, tab: 'Files' })

@@ -8,6 +8,7 @@ import classify from '../lib/classify'
 import valoo from '../lib/valoo'
 import stylish from '../lib/stylish'
 import pdsp from '../lib/pdsp'
+import { getRoute } from '../lib/routeutil'
 
 const style = `
   .icon { padding-right: 20px; }
@@ -30,7 +31,7 @@ export default
 function MemberSearch () {
   let input
   let expanded = valoo(false)
-  let text = ''
+  let text = getRoute().query.q || ''
 
   expanded.on(m.redraw)
 
@@ -43,7 +44,7 @@ function MemberSearch () {
   function onSearch (e) {
     pdsp(e)
     text = e.target.value.toLowerCase()
-    const url = text ? `/members/${text}` : '/members'
+    const url = text ? `/?q=${text}` : '/'
     if (url !== m.route.get()) m.route.set(url)
     if (!text) expanded(false)
   }

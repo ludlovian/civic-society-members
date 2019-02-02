@@ -16,31 +16,35 @@ function Field () {
       color: red;
     }
   `
-  let fieldState
+  let _fieldState
 
-  function onChange (e) {
+  function onchange (e) {
     pdsp(e)
-    fieldState.onChange(e.target.value)
+    _fieldState.onChange(e.target.value)
   }
 
   return {
-    oninit ({ attrs }) {
-      fieldState = attrs.fieldState
-      fieldState.notify(m.redraw)
-    },
-
     view ({ attrs }) {
-      const xattrs = attrs.xattrs || {}
+      const {
+        fieldState,
+        xattrs = {},
+        ...rest } = attrs
+
+      if (_fieldState !== fieldState) {
+        _fieldState = fieldState
+        _fieldState.notify(m.redraw)
+      }
+
       return classify(
         stylish(style),
         m(TextField,
           {
-            ...attrs,
+            ...rest,
             value: fieldState.value,
             helperText: fieldState.error,
             persistent: true,
             validationMsg: true,
-            xattrs: { ...xattrs, onchange: onChange }
+            xattrs: { ...xattrs, onchange }
           }
         )
       )
@@ -54,25 +58,25 @@ Field.Select = function FieldSelect () {
       color: red;
     }
   `
-  let fieldState
+  let _fieldState
 
-  function onChange (e) {
+  function onchange (e) {
     pdsp(e)
-    fieldState.onChange(e.detail.value)
+    _fieldState.onChange(e.detail.value)
   }
 
   return {
-    oninit ({ attrs }) {
-      fieldState = attrs.fieldState
-      fieldState.notify(m.redraw)
-    },
-
     view ({ attrs }) {
       const {
         fieldState,
         xattrs = {},
         values,
         ...rest } = attrs
+
+      if (_fieldState !== fieldState) {
+        _fieldState = fieldState
+        _fieldState.notify(m.redraw)
+      }
       const selectedIndex = values.findIndex(
         ([ value, text ]) => value === fieldState.value
       )
@@ -85,7 +89,7 @@ Field.Select = function FieldSelect () {
             helperText: fieldState.error,
             persistent: true,
             validationMsg: true,
-            xattrs: { ...xattrs, onchange: onChange }
+            xattrs: { ...xattrs, onchange }
           },
           values.map(([ value, text ]) =>
             m('option',

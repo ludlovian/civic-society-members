@@ -5,7 +5,6 @@ import m from 'mithril'
 import { MDCTabBar } from '@material/tab-bar'
 
 import classify from '../../lib/classify'
-import valoo from '../../lib/valoo'
 
 export default
 function TabBar () {
@@ -112,50 +111,41 @@ TabBar.TabText = {
 }
 
 TabBar.AutoTab = function AutoTab () {
-  let activeTab
-  let initialTab
   let tabs
-  let attrOnChange
+  let _onchange
+  let _ontabchange
 
-  function onChange (e) {
-    activeTab(tabs[e.detail.index])
-    if (attrOnChange) attrOnChange(e)
+  function onchange (e) {
+    const tab = tabs[e.detail.index]
+    if (_onchange) _onchange(e)
+    if (_ontabchange) _ontabchange(tab)
+    m.redraw()
   }
 
   return {
-    oninit ({ children, attrs }) {
-      tabs = children
-        .map(child => child.attrs && child.attrs.tab)
-        .filter(Boolean)
-      activeTab = valoo(attrs.tab || tabs[0])
-      initialTab = activeTab()
-      activeTab.on(m.redraw)
-    },
-
     view ({ children, attrs }) {
       const {
+        ontabchange,
         tab,
         xattrs = {},
         ...rest } = attrs
+      _onchange = xattrs.onchange
+      _ontabchange = ontabchange
 
-      attrOnChange = xattrs.onchange
-
+      tabs = children
+        .map(child => child.attrs && child.attrs.tab)
+        .filter(Boolean)
+      const activeTab = tabs.find(t => t === tab) || tabs[0]
       const activeChild = children
-        .find(child => child.attrs && child.attrs.tab === activeTab())
-
+        .find(child => child.attrs && child.attrs.tab === activeTab)
       if (!activeChild) return false
 
-      // render the tab with the *initial* tab, so that we do not
-      // re-render, but let the Material JS handle it
-      // but we render the content with the *active* tab
       return m('div', { ...rest },
         m(TabBar,
-          {
-            xattrs: { onchange: onChange }
-          },
+          { xattrs: { onchange } },
           tabs.map(t =>
             m(TabBar.Tab,
-              { active: t === initialTab },
+              { active: t === activeTab },
               m(TabBar.TabText, t)
             )
           )

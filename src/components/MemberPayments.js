@@ -12,7 +12,7 @@ import classify from '../lib/classify'
 import stylish from '../lib/stylish'
 import sortBy from '../lib/sortBy'
 import pdsp from '../lib/pdsp'
-import valoo from '../lib/valoo'
+import { getRoute, setRoute } from '../lib/routeutil'
 
 import Field from './Field'
 import { FormState, FieldState, validators, formatters, parsers } from '../lib/formstate'
@@ -35,9 +35,6 @@ function MemberPayments () {
     .buttons>.mdc-button { margin-left: 12px; }
   `
 
-  const adding = valoo(false)
-  adding.on(m.redraw)
-
   let form
   let member
   let lastPayment
@@ -45,12 +42,16 @@ function MemberPayments () {
   function onedit (e) {
     pdsp(e)
     form = getForm(lastPayment)
-    adding(true)
+    const route = getRoute()
+    route.query.add = ''
+    setRoute(route)
   }
 
   function oncancel (e) {
     pdsp(e)
-    adding(false)
+    const route = getRoute()
+    delete route.query.add
+    setRoute(route)
   }
 
   async function onsave (e) {
@@ -58,12 +59,16 @@ function MemberPayments () {
     await (form.validate())
     if (form.hasError) return null
     store.members.addPayment(member, form.getValues())
-    adding(false)
+    const route = getRoute()
+    delete route.query.add
+    setRoute(route)
   }
 
   return {
     view ({ attrs }) {
       member = attrs.member
+      const route = getRoute()
+      const isAdding = 'add' in route.query
       const payments = member.payments
         .slice()
         .sort(sortBy(pmt => pmt.date))
@@ -71,8 +76,6 @@ function MemberPayments () {
       // stash the last payment away each time, so we can use
       // it as a template for the form
       lastPayment = payments.slice().pop()
-
-      const isAdding = adding()
 
       return classify(
         stylish(style),

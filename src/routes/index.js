@@ -19,9 +19,7 @@ const { isSignedIn } = store.auth
 
 export default
 {
-  '/': { onmatch () { m.route.set(isSignedIn() ? '/members' : '/login') } },
-  '/members': authRoute(MemberList, true),
-  '/members/:filter': authRoute(MemberList, true),
+  '/': authRoute(MemberList, true),
   '/member/:id': authRoute(Member),
   '/spreadsheet': authRoute(Spreadsheet),
   '/login': unauthRoute(Login),
@@ -48,7 +46,7 @@ function unauthRoute (comp) {
   return {
     render (vnode) {
       if (!isSignedIn()) return m(Layout, m(comp, vnode.attrs))
-      m.route.set('/members')
+      m.route.set('/')
       return m(Layout, { includeSearch: true }, m(MemberList, vnode.attrs))
     }
   }

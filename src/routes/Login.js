@@ -45,7 +45,7 @@ function Login () {
       password: form.$.password.$
     })
     if (store.auth.isSignedIn()) {
-      m.route.set('/members')
+      m.route.set('/')
     } else {
       m.route.set('/error')
     }

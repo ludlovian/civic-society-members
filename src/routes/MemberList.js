@@ -13,6 +13,7 @@ import store from '../store'
 import * as Member from '../store/member'
 import breakLines from '../lib/breakLines'
 import sortBy from '../lib/sortBy'
+import { getRoute } from '../lib/routeutil'
 
 export default
 function MemberList () {
@@ -27,8 +28,9 @@ function MemberList () {
     .loading { padding: 20px; }
   `
   return {
-    view ({ attrs: { filter } }) {
-      if (filter) filter = filter.toLowerCase()
+    view () {
+      const route = getRoute()
+      const filter = (route.query.q || '').toLowerCase()
       const loaded = store.members.isLoaded()
 
       const members = Object.values(store.members.members())

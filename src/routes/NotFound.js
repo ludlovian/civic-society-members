@@ -5,6 +5,7 @@ import m from 'mithril'
 import Card from '../components/Material/Card'
 import Typography from '../components/Material/Typography'
 
+import classify from '../lib/classify'
 import stylish from '../lib/stylish'
 
 const style = `
@@ -15,16 +16,22 @@ const style = `
 `
 export default {
   view () {
-    const cl = stylish(style)
-    return m('.scrim', { class: cl },
-      m(Card, { attrs: { class: 'card' } },
-        m('.header',
-          m(Typography.Headline4, '404! Page not found.')
-        ),
+    return classify(
+      stylish(style),
+      'scrim',
+      m('div',
+        classify(
+          'card',
+          m(Card,
+            m('div.header',
+              m(Typography.Headline4, '404! Page not found.')
+            ),
 
-        m('.body',
-          m(Typography.Body1,
-            'Looks like the page you are trying to access does not exist'
+            m('div.body',
+              m(Typography.Body1,
+                'Looks like the page you are trying to access does not exist'
+              )
+            )
           )
         )
       )
