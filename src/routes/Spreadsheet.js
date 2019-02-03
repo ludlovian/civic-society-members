@@ -9,5 +9,7 @@ export default {
     window.history.back()
   },
 
-  view () { return false }
+  view () {
+    return false
+  }
 }

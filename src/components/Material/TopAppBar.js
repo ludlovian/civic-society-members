@@ -6,8 +6,7 @@ import { MDCTopAppBar } from '@material/top-app-bar/index'
 
 import classify from '../../lib/classify'
 
-export default
-function TopAppBar () {
+export default function TopAppBar () {
   let control
 
   return {
@@ -22,11 +21,7 @@ function TopAppBar () {
     },
 
     view ({ children, attrs }) {
-      const {
-        className,
-        fixed,
-        xattrs = {},
-        ...rest } = attrs
+      const { className, fixed, xattrs = {}, ...rest } = attrs
       return classify(
         className,
         'mdc-top-app-bar',
@@ -39,10 +34,7 @@ function TopAppBar () {
 
 TopAppBar.Row = {
   view ({ children, attrs }) {
-    const {
-      className,
-      xattrs = {},
-      ...rest } = attrs
+    const { className, xattrs = {}, ...rest } = attrs
     return classify(
       className,
       'mdc-top-app-bar__row',
@@ -53,12 +45,7 @@ TopAppBar.Row = {
 
 TopAppBar.Section = {
   view ({ children, attrs }) {
-    const {
-      className,
-      alignStart,
-      alignEnd,
-      xattrs = {},
-      ...rest } = attrs
+    const { className, alignStart, alignEnd, xattrs = {}, ...rest } = attrs
     return classify(
       className,
       'mdc-top-app-bar__section',
@@ -73,11 +60,7 @@ TopAppBar.Section = {
 
 TopAppBar.Icon = {
   view ({ children, attrs }) {
-    const {
-      className,
-      navigation,
-      xattrs = {},
-      ...rest } = attrs
+    const { className, navigation, xattrs = {}, ...rest } = attrs
     return classify(
       className,
       'material-icons',

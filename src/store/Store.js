@@ -4,8 +4,7 @@ import valoo from '../lib/valoo'
 
 const objForEach = (o, fn) => Object.entries(o).forEach(fn)
 
-export default
-function Store () {
+export default function Store () {
   // the returned store is actually just a valoo
   const store = valoo({})
 
@@ -16,9 +15,10 @@ function Store () {
     }
   }
 
-  Object.defineProperty(store, 'root',
-    { configurable: true, get: () => store.parent ? store.parent.root : store }
-  )
+  Object.defineProperty(store, 'root', {
+    configurable: true,
+    get: () => (store.parent ? store.parent.root : store)
+  })
 
   return store
 }
@@ -36,7 +36,9 @@ function combine (stores) {
     update(substore())
     substore.on(update)
   })
-  store.update = () => { throw new Error('cannot update a derived store') }
+  store.update = () => {
+    throw new Error('cannot update a derived store')
+  }
   return store
 }
 
@@ -44,9 +46,8 @@ function load (def) {
   const store = Store()
   if (def.data) store(def.data)
 
-  const actions = typeof def.actions === 'function'
-    ? def.actions(store)
-    : (def.actions || {})
+  const actions =
+    typeof def.actions === 'function' ? def.actions(store) : def.actions || {}
   objForEach(actions, ([k, fn]) => {
     store[k] = (...args) => {
       const ret = fn(store(), ...args)
@@ -56,9 +57,8 @@ function load (def) {
     }
   })
 
-  const views = typeof def.views === 'function'
-    ? def.views(store)
-    : (def.views || {})
+  const views =
+    typeof def.views === 'function' ? def.views(store) : def.views || {}
   objForEach(views, ([k, fn]) => {
     store[k] = (...args) => fn(store(), ...args)
   })

@@ -13,36 +13,28 @@ export default {
     const url = m.route.get()
     const list = buildList(isSignedIn, url)
 
-    return m(Drawer, { open, onClose },
-      m(Drawer.Header, { title: 'Menu' }),
-      m(Drawer.Content, renderList(list, onClose))
+    return (
+      <Drawer open={open} close={onClose}>
+        <Drawer.Header title='Menu' />
+        <Drawer.Content>{renderList(list, onClose)}</Drawer.Content>
+      </Drawer>
     )
   }
 }
 
-const handlers = {}
-
 function renderList (list, onClose) {
-  return list.map(item => {
-    let handler = handlers[item.href]
-    if (!handler) {
-      handler = handlers[item.href] = e => {
-        pdsp(e)
-        m.route.set(item.href)
-        Promise.resolve().then(onClose)
-      }
+  return list.map(({ selected, href, icon, text }) => {
+    function onclick (e) {
+      pdsp(e)
+      m.route.set(href)
+      setTimeout(onClose)
     }
 
-    return m(Drawer.Item,
-      {
-        selected: item.selected,
-        xattrs: {
-          href: item.href,
-          onclick: handler
-        }
-      },
-      m(Drawer.ItemIcon, item.icon),
-      m(Drawer.ItemText, item.text)
+    return (
+      <Drawer.Item selected={selected} xattrs={{ href, onclick }}>
+        <Drawer.ItemIcon>{icon}</Drawer.ItemIcon>
+        <Drawer.ItemText>{text}</Drawer.ItemText>
+      </Drawer.Item>
     )
   })
 }
@@ -65,7 +57,9 @@ function buildList (isSignedIn, url) {
   list.push({ text: 'Log out', icon: 'close', href: '/logout' })
 
   if (selected === undefined) {
-    list.forEach((item, i) => { if (url === item.href) selected = i })
+    list.forEach((item, i) => {
+      if (url === item.href) selected = i
+    })
     if (selected === undefined) selected = 0
   }
   list[selected].selected = true

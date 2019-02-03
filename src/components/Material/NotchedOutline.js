@@ -4,8 +4,7 @@ import m from 'mithril'
 
 import { MDCNotchedOutline } from '@material/notched-outline'
 
-export default
-function NotchedOutline () {
+export default function NotchedOutline () {
   let control
 
   return {
@@ -19,10 +18,12 @@ function NotchedOutline () {
 
     view ({ children, attrs }) {
       const { xattrs = {}, ...rest } = attrs
-      return m('div.mdc-notched-outline', { ...xattrs, ...rest },
-        m('div.mdc-notched-outline__leading'),
-        m('div.mdc-notched-outline__notch', children),
-        m('div.mdc-notched-outline__trailing')
+      return (
+        <div class='mdc-notched-outline' {...xattrs} {...rest}>
+          <div className='mdc-notched-outline__leading' />
+          <div className='mdc-notched-outline__notch'>{children}</div>
+          <div className='mdc-notched-outline__trailing' />
+        </div>
       )
     }
   }

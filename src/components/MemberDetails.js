@@ -8,7 +8,13 @@ import Button from '../components/Material/Button'
 import store from '../store'
 import classify from '../lib/classify'
 import stylish from '../lib/stylish'
-import { FormState, FieldState, validators, formatters, parsers } from '../lib/formstate'
+import {
+  FormState,
+  FieldState,
+  validators,
+  formatters,
+  parsers
+} from '../lib/formstate'
 import Field from '../components/Field'
 import pdsp from '../lib/pdsp'
 import { getRoute, setRoute } from '../lib/routeutil'
@@ -16,8 +22,7 @@ import schema from '../schema'
 
 const { required } = validators
 
-export default
-function MemberDetails () {
+export default function MemberDetails () {
   const style = `
     >form { padding-top: 20px; }
 
@@ -77,103 +82,98 @@ function MemberDetails () {
 
       return classify(
         stylish(style),
-        m('div',
-          m('form',
-            m(Field, {
-              className: 'field',
-              id: 'sortName',
-              label: 'Sort name',
-              fieldState: form.$.sortName,
-              disabled: !isEditing
-            }),
+        <div>
+          <form>
+            <Field
+              className='field'
+              id='sortName'
+              label='Sort name'
+              fieldState={form.$.sortName}
+              disabled={!isEditing}
+            />
 
-            m(Field, {
-              className: 'field',
-              label: 'Address',
-              fieldState: form.$.address,
-              type: 'textarea',
-              rows: 5,
-              disabled: !isEditing
-            }),
+            <Field
+              className='field'
+              label='Address'
+              fieldState={form.$.address}
+              type='textarea'
+              rows='5'
+              disabled={!isEditing}
+            />
 
-            m(Field, {
-              className: 'field',
-              label: 'Telephone',
-              fieldState: form.$.tel,
-              disabled: !isEditing
-            }),
+            <Field
+              className='field'
+              label='Telephone'
+              fieldState={form.$.tel}
+              disabled={!isEditing}
+            />
 
-            m(Field, {
-              className: 'field',
-              label: 'Email address',
-              fieldState: form.$.email,
-              disabled: !isEditing
-            }),
+            <Field
+              className='field'
+              label='Email address'
+              fieldState={form.$.email}
+              disabled={!isEditing}
+            />
 
-            m(Field.Select, {
-              className: 'field',
-              label: 'Membership type',
-              fieldState: form.$.type,
-              values: schema.member.type,
-              disabled: !isEditing
-            }),
+            <Field.Select
+              className='field'
+              label='Membership type'
+              fieldState={form.$.type}
+              values={schema.member.type}
+              disabled={!isEditing}
+            />
 
-            m(Field, {
-              className: 'field',
-              label: 'Notes',
-              fieldState: form.$.notes,
-              type: 'textarea',
-              rows: 3,
-              disabled: !isEditing
-            }),
+            <Field
+              className='field'
+              label='Notes'
+              fieldState={form.$.notes}
+              type='textarea'
+              rows='3'
+              disabled={!isEditing}
+            />
 
-            m(Field.Select, {
-              className: 'field',
-              label: 'Postage',
-              fieldState: form.$.postType,
-              values: schema.member.postType,
-              disabled: !isEditing
-            }),
+            <Field.Select
+              className='field'
+              label='Postage'
+              fieldState={form.$.postType}
+              values={schema.member.postType}
+              disabled={!isEditing}
+            />
 
-            m(Field.Select, {
-              className: 'field',
-              label: 'Gift Aid',
-              fieldState: form.$.giftAid,
-              values: schema.member.giftAid,
-              disabled: !isEditing
-            }),
+            <Field.Select
+              className='field'
+              label='Gift Aid'
+              fieldState={form.$.giftAid}
+              values={schema.member.giftAid}
+              disabled={!isEditing}
+            />
 
-            m(Field.Select, {
-              className: 'field',
-              label: 'Pay by',
-              fieldState: form.$.usualMethod,
-              values: schema.member.usualMethod,
-              disabled: !isEditing
-            })
-          ), // form
+            <Field.Select
+              className='field'
+              label='Pay by'
+              fieldState={form.$.usualMethod}
+              values={schema.member.usualMethod}
+              disabled={!isEditing}
+            />
+          </form>
 
-          m(Card.Actions,
-            { className: 'buttons' },
-            isEditing && m(Button,
-              {
-                key: 'cancel',
-                ripple: true,
-                xattrs: { onclick: oncancel }
-              },
-              'Cancel'
-            ),
+          <Card.Actions className='buttons'>
+            {isEditing && (
+              <Button key='cancel' ripple xattrs={{ onclick: oncancel }}>
+                Cancel
+              </Button>
+            )}
 
-            m(Button,
-              {
-                key: 'edit',
-                ripple: true,
-                raised: isEditing,
-                xattrs: { onclick: isEditing ? onsave : onedit }
-              },
-              isEditing ? 'Save' : 'Edit'
-            )
-          ) // Card.Actions
-        ) // div
+            <Button
+              key='edit'
+              ripple
+              raised={isEditing}
+              xattrs={{ onclick: isEditing ? onsave : onedit }}
+            >
+              {isEditing ? 'Save' : 'Edit'}
+            </Button>
+          </Card.Actions>
+        </div>
       )
     }
   }
@@ -181,18 +181,15 @@ function MemberDetails () {
 
 function getForm (mbr) {
   return new FormState({
-    sortName: new FieldState(mbr.sortName)
-      .validators(required),
+    sortName: new FieldState(mbr.sortName).validators(required),
 
-    address: new FieldState(mbr.address)
-      .validators(required),
+    address: new FieldState(mbr.address).validators(required),
 
     tel: new FieldState(mbr.tel),
 
     email: new FieldState(mbr.email),
 
-    type: new FieldState(mbr.type)
-      .validators(required),
+    type: new FieldState(mbr.type).validators(required),
 
     notes: new FieldState(mbr.notes),
 
@@ -200,8 +197,7 @@ function getForm (mbr) {
       .parser(parsers.boolean)
       .formatter(formatters.boolean),
 
-    postType: new FieldState(mbr.postType)
-      .validators(required),
+    postType: new FieldState(mbr.postType).validators(required),
 
     usualMethod: new FieldState(mbr.usualMethod)
   })

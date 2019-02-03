@@ -5,10 +5,9 @@ import m from 'mithril'
 import { MDCRipple } from '@material/ripple'
 import Button from './Button'
 
-import classify from '../../lib/classify'
+import { classnames } from '../../lib/classify'
 
-export default
-function Card () {
+export default function Card () {
   let mdcRipple
 
   return {
@@ -21,17 +20,15 @@ function Card () {
     },
 
     view ({ children, attrs }) {
-      const {
-        className,
-        outlined,
-        ripple,
-        xattrs = {},
-        ...rest } = attrs
-      return classify(
-        className,
-        'mdc-card',
-        { 'mdc-card--outlined': outlined },
-        m('div', { ...xattrs, ...rest }, children)
+      const { className, outlined, ripple, xattrs = {}, ...rest } = attrs
+      const cl = classnames(className, 'mdc-card', {
+        'mdc-card--outlined': outlined
+      })
+
+      return (
+        <div className={cl} {...xattrs} {...rest}>
+          {children}
+        </div>
       )
     }
   }
@@ -39,60 +36,58 @@ function Card () {
 
 Card.Actions = {
   view ({ children, attrs }) {
-    const {
-      className,
-      xattrs = {},
-      ...rest } = attrs
-    return classify(
-      className,
-      'mdc-card__actions',
-      m('div', { ...xattrs, ...rest }, children)
+    const { className, xattrs = {}, ...rest } = attrs
+    const cl = classnames(className, 'mdc-card__actions')
+
+    return (
+      <div className={cl} {...xattrs} {...rest}>
+        {children}
+      </div>
     )
   }
 }
 
 Card.ActionButton = {
   view ({ children, attrs }) {
-    const {
-      className,
-      xattrs = {},
-      ...rest } = attrs
-    return classify(
-      className,
-      'mdc-card',
-      'mdc-card__action--button',
-      m(Button, { xattrs, ...rest }, children)
+    const { className, xattrs = {}, ...rest } = attrs
+    const cl = classnames(className, 'mdc-card', 'mdc-card__action--button')
+
+    return (
+      <Button className={cl} {...xattrs} {...rest}>
+        {children}
+      </Button>
     )
   }
 }
 
 Card.ActionIcons = {
   view ({ children, attrs }) {
-    const {
-      className,
-      xattrs = {},
-      ...rest } = attrs
-    return classify(
-      className,
-      'mdc-card__action-icons',
-      m('div', { ...xattrs, ...rest }, children)
+    const { className, xattrs = {}, ...rest } = attrs
+    const cl = classnames(className, 'mdc-card__action-icons')
+
+    return (
+      <div className={cl} {...xattrs} {...rest}>
+        {children}
+      </div>
     )
   }
 }
 
 Card.ActionIcon = {
   view ({ children, attrs }) {
-    const {
-      className,
-      xattrs = {},
-      ...rest } = attrs
-    return classify(
+    const { className, xattrs = {}, ...rest } = attrs
+    const cl = classnames(
       className,
       'material-icons',
       'mdc-icon-button',
       'mdc-card__action',
-      'mdc-card__action--icon',
-      m('a', { ...xattrs, ...rest }, children)
+      'mdc-card__action--icon'
+    )
+
+    return (
+      <a className={cl} {...xattrs} {...rest}>
+        {children}
+      </a>
     )
   }
 }

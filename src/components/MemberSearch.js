@@ -4,7 +4,7 @@ import m from 'mithril'
 
 import TopAppBar from './Material/TopAppBar'
 
-import classify from '../lib/classify'
+import classify, { classnames } from '../lib/classify'
 import valoo from '../lib/valoo'
 import stylish from '../lib/stylish'
 import pdsp from '../lib/pdsp'
@@ -27,8 +27,7 @@ const style = `
   }
 `
 
-export default
-function MemberSearch () {
+export default function MemberSearch () {
   let input
   let expanded = valoo(false)
   let text = getRoute().query.q || ''
@@ -57,32 +56,26 @@ function MemberSearch () {
     view () {
       return classify(
         stylish(style),
-        m(TopAppBar.Section, { alignEnd: true },
-          classify(
-            'icon',
-            m(TopAppBar.Icon,
-              { xattrs: { onclick: onClickIcon } },
-              'search'
-            )
-          ),
+        <TopAppBar.Section alignEnd>
+          <TopAppBar.Icon className='icon' xattrs={{ onclick: onClickIcon }}>
+            search
+          </TopAppBar.Icon>
 
-          classify(
-            'text-input',
-            'mdc-text-field',
-            {
+          <div
+            className={classnames('text-input', 'mdc-text-field', {
               expanded: expanded(),
               collapsed: !expanded()
-            },
-            m('div',
-              m('input.mdc-text-field__input', {
-                type: 'search',
-                placeholder: 'search',
-                value: text,
-                onsearch: onSearch
-              })
-            )
-          )
-        )
+            })}
+          >
+            <input
+              className='mdc-text-field__input'
+              type='search'
+              placeholder='search'
+              value={text}
+              onsearch={onSearch}
+            />
+          </div>
+        </TopAppBar.Section>
       )
     }
   }

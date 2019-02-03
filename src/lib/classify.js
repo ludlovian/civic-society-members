@@ -18,7 +18,6 @@ function classes (...args) {
   return ret
 }
 
-export default
 function classify (...args) {
   const vnode = args.pop()
   if (!vnode.attrs) vnode.attrs = {}
@@ -30,3 +29,11 @@ function classify (...args) {
   if (vnode.attrs.class) vnode.attrs.class = undefined
   return vnode
 }
+
+function classnames (...args) {
+  return classes(...args).join(' ')
+}
+
+classify.classnames = classnames
+export default classify
+export { classify, classnames }

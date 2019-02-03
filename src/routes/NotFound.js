@@ -18,23 +18,19 @@ export default {
   view () {
     return classify(
       stylish(style),
-      'scrim',
-      m('div',
-        classify(
-          'card',
-          m(Card,
-            m('div.header',
-              m(Typography.Headline4, '404! Page not found.')
-            ),
+      <div className='scrim'>
+        <Card className='card'>
+          <div className='header'>
+            <Typography headline4>404! Page not found.</Typography>
+          </div>
 
-            m('div.body',
-              m(Typography.Body1,
-                'Looks like the page you are trying to access does not exist'
-              )
-            )
-          )
-        )
-      )
+          <div className='body'>
+            <Typography body1>
+              Looks like the page you are trying to access does not exist
+            </Typography>
+          </div>
+        </Card>
+      </div>
     )
   }
 }

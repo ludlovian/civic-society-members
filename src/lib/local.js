@@ -28,7 +28,4 @@ function saveToLocal ({ key, compress = false }, data) {
   }
 }
 
-export {
-  loadFromLocal,
-  saveToLocal
-}
+export { loadFromLocal, saveToLocal }

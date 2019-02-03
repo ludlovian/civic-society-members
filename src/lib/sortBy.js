@@ -1,7 +1,6 @@
 'use strict'
 
-export default
-function sortBy (selector, desc = false) {
+export default function sortBy (selector, desc = false) {
   return (a, b) => {
     const aData = selector(a)
     const bData = selector(b)

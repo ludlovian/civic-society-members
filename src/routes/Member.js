@@ -15,12 +15,9 @@ import stylish from '../lib/stylish'
 import classify from '../lib/classify'
 import { getRoute, setRoute } from '../lib/routeutil'
 
-// const MemberDetails = { view: () => m(Typography.Headline6, 'Details') }
-
 const TABS = 'Details Payments Files'.split(' ')
 
-export default
-function Member () {
+export default function Member () {
   const style = `
     :self.scrim { padding: 12px; }
     .card { margin: auto; padding: 16px; max-width: 800px; }
@@ -31,7 +28,8 @@ function Member () {
       store.members.ensureFilesLoaded()
     },
 
-    view ({ attrs: { id } }) {
+    view ({ attrs: { key } }) {
+      const id = key
       if (id === 'new') {
         const member = store.members.getNewMember()
         setRoute(
@@ -56,29 +54,27 @@ function Member () {
 
       return classify(
         stylish(style),
-        'scrim',
-        m('div',
-          m(Card, { className: 'card' },
-            !member && m(Typography.Headline6,
-              'No such member exists'
-            ),
+        <div className='scrim'>
+          <Card className='card'>
+            {!member && (
+              <Typography headline6>No such member exists</Typography>
+            )}
 
-            member && [
-              m('div.header',
-                m(Typography.Headline6,
-                  `${member.id}: ${member.sortName}`
-                )
-              ),
+            {member && [
+              <div className='header'>
+                <Typography headline6>
+                  {`${member.id}: ${member.sortName}`}
+                </Typography>
+              </div>,
 
-              m(TabBar.AutoTab,
-                { tab, ontabchange },
-                m(MemberDetails, { member, tab: 'Details' }),
-                m(MemberPayments, { member, tab: 'Payments' }),
-                m(MemberFiles, { member, tab: 'Files' })
-              )
-            ]
-          )
-        )
+              <TabBar.AutoTab tab={tab} ontabchange={ontabchange}>
+                <MemberDetails tab='Details' key={member.id} member={member} />
+                <MemberPayments tab='Payments' key={member.id} member={member} />
+                <MemberFiles tab='Files' key={member.id} member={member} />
+              </TabBar.AutoTab>
+            ]}
+          </Card>
+        </div>
       )
     }
   }

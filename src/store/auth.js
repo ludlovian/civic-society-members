@@ -64,5 +64,5 @@ export default {
     }
   }),
 
-  onChange: (snap) => saveToLocal({ key: 'auth' }, snap)
+  onChange: snap => saveToLocal({ key: 'auth' }, snap)
 }

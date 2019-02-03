@@ -17,10 +17,9 @@ import Spreadsheet from './Spreadsheet'
 
 const { isSignedIn } = store.auth
 
-export default
-{
+export default {
   '/': authRoute(MemberList, true),
-  '/member/:id': authRoute(Member),
+  '/member/:key': authRoute(Member),
   '/spreadsheet': authRoute(Spreadsheet),
   '/login': unauthRoute(Login),
   '/logout': route(Logout),
@@ -31,7 +30,9 @@ export default
 function authRoute (comp, includeSearch = false) {
   return {
     render (vnode) {
-      if (isSignedIn()) return m(Layout, { includeSearch }, m(comp, vnode.attrs))
+      if (isSignedIn()) {
+        return m(Layout, { includeSearch }, m(comp, vnode.attrs))
+      }
       m.route.set('/login')
       return m(Layout, m(Login))
     }
@@ -39,7 +40,11 @@ function authRoute (comp, includeSearch = false) {
 }
 
 function route (comp) {
-  return { render (vnode) { return m(Layout, m(comp, vnode.attrs)) } }
+  return {
+    render (vnode) {
+      return m(Layout, m(comp, vnode.attrs))
+    }
+  }
 }
 
 function unauthRoute (comp) {

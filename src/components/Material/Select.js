@@ -6,10 +6,9 @@ import { MDCSelect } from '@material/select'
 
 import NotchedOutline from './NotchedOutline'
 import { getId } from './util'
-import classify from '../../lib/classify'
+import { classnames } from '../../lib/classify'
 
-export default
-function Select () {
+export default function Select () {
   let id
   let control
 
@@ -39,58 +38,58 @@ function Select () {
         persistent,
         validationMsg,
         xattrs, // deliberatly excluded. The only hook is onchange above
-        ...rest } = attrs
+        ...rest
+      } = attrs
 
-      return m('div', { className },
-        classify(
-          {
-            'mdc-select': true,
-            'mdc-select--outlined': label,
-            'mdc-select--disabled': disabled
-          },
-          m('div',
-            m('i.mdc-select__dropdown-icon'),
+      const cl = classnames({
+        'mdc-select': true,
+        'mdc-select--outlined': label,
+        'mdc-select--disabled': disabled
+      })
 
-            m('select',
-              {
-                ...rest,
-                className: 'mdc-select__native-control',
-                id,
-                'aria-controls': helperText !== undefined && `${id}-helper-text`,
-                disabled
-              },
-              children
-            ),
+      const clLabel = classnames('mdc-floating-label', {
+        'mdc-floating-label--float-above': attrs.selectedIndex !== -1
+      })
 
-            label && m(NotchedOutline,
-              classify(
-                {
-                  'mdc-floating-label': true,
-                  'mdc-floating-label--float-above': attrs.selectedIndex !== -1
-                },
-                m('label',
-                  { for: id },
-                  label
-                )
-              )
-            )
-          )
-        ),
+      const clHelperText = classnames('mdc-select-helper-text', {
+        'mdc-select-helper-text--persistent': persistent,
+        'mdc-select-helper-text--validation-msg': validationMsg
+      })
 
-        helperText !== undefined && classify(
-          {
-            'mdc-select-helper-text': true,
-            'mdc-select-helper-text--persistent': persistent,
-            'mdc-select-helper-text--validation-msg': validationMsg
-          },
-          m('p',
-            {
-              'aria-hidden': true,
-              id: `${id}-helper-text`
-            },
-            helperText
-          )
-        )
+      return (
+        <div className={className}>
+          <div className={cl}>
+            <i className='mdc-select__dropdown-icon' />
+
+            <select
+              className='mdc-select__native-control'
+              id={id}
+              aria-controls={helperText !== undefined && `${id}-helper-text`}
+              disabled={disabled}
+              {...rest}
+            >
+              {children}
+            </select>
+
+            {label && (
+              <NotchedOutline>
+                <label className={clLabel} for={id}>
+                  {label}
+                </label>
+              </NotchedOutline>
+            )}
+          </div>
+
+          {helperText !== undefined && (
+            <p
+              className={clHelperText}
+              aria-hidden='true'
+              id={`${id}-helper-text`}
+            >
+              {helperText}
+            </p>
+          )}
+        </div>
       )
     }
   }

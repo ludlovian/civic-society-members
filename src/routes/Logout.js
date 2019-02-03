@@ -23,24 +23,20 @@ export default {
   view () {
     return classify(
       stylish(style),
-      'scrim',
-      m('div',
-        classify(
-          'card',
-          m(Card,
-            m('div.header',
-              m(Typography.Headline5, 'Logged out')
-            ),
+      <div className='scrim'>
+        <Card className='card'>
+          <div className='header'>
+            <Typography headline5>Logged out</Typography>
+          </div>
 
-            m('div.body',
-              m('Typography.Body1',
-                'You have now logged out of the system. ',
-                'You must log back in before you can use it again.'
-              )
-            )
-          )
-        )
-      )
+          <div className='body'>
+            <Typography body1>
+              You have now logged out of the system. You must log back in before
+              you can use it again.
+            </Typography>
+          </div>
+        </Card>
+      </div>
     )
   }
 }

@@ -6,8 +6,7 @@ import valoo from '../lib/valoo'
 import Topbar from './Topbar'
 import Sidebar from './Sidebar'
 
-export default
-function Layout () {
+export default function Layout () {
   let drawerOpen = valoo(false)
   drawerOpen.on(m.redraw)
 
@@ -22,24 +21,19 @@ function Layout () {
 
   return {
     view ({ children, attrs: { includeSearch } }) {
-      return m('div#app',
-        m(Sidebar,
-          {
-            open: drawerOpen(),
-            onClose: closeDrawer
-          }
-        ),
+      return m(
+        'div#app',
+        m(Sidebar, {
+          open: drawerOpen(),
+          onClose: closeDrawer
+        }),
 
-        m(Topbar,
-          {
-            onNav: openDrawer,
-            includeSearch
-          }
-        ),
+        m(Topbar, {
+          onNav: openDrawer,
+          includeSearch
+        }),
 
-        m('div.mdc-top-app-bar--fixed-adjust.mdc-theme--background',
-          children
-        )
+        m('div.mdc-top-app-bar--fixed-adjust.mdc-theme--background', children)
       )
     }
   }

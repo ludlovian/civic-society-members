@@ -10,8 +10,7 @@ import classify from '../lib/classify'
 import stylish from '../lib/stylish'
 import pdsp from '../lib/pdsp'
 
-export default
-function AppError () {
+export default function AppError () {
   const style = `
     :self.scrim { padding: 16px; height: 100% }
     .card { padding: 16px; maxWidth: 500px; margin: auto; }
@@ -31,35 +30,34 @@ function AppError () {
 
       return classify(
         stylish(style),
-        'scrim',
-        m('div',
-          classify(
-            'card',
-            m(Card,
-              m('div.header',
-                m('div', m(Typography.Headline5, 'Error')),
-                m('div', m(Typography.Body1,
-                  error ? 'The following error has occured'
-                    : 'No error has occured'
-                ))
-              ),
+        <div className='scrim'>
+          <Card className='card'>
+            <div className='header'>
+              <div>
+                <Typography headline5>Error</Typography>
+              </div>
+              <div>
+                <Typography body1>
+                  {error
+                    ? 'The following error has occured'
+                    : 'No error has occured'}
+                </Typography>
+              </div>
+            </div>
 
-              m('pre.details',
-                error && (error.stack || error.message || String(error))
-              ),
+            <pre className='details'>
+              {error && (error.stack || error.message || String(error))}
+            </pre>
 
-              error && classify(
-                'buttons',
-                m(Card.Actions,
-                  m(Card.ActionButton, {
-                    ripple: true,
-                    xattrs: { onclick: clearError }
-                  }, 'Clear')
-                )
-              )
-            )
-          )
-        )
+            {error && (
+              <Card.Actions className='buttons'>
+                <Card.ActionButton ripple xattrs={{ onclick: clearError }}>
+                  Clear
+                </Card.ActionButton>
+              </Card.Actions>
+            )}
+          </Card>
+        </div>
       )
     }
   }

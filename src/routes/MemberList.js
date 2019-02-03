@@ -14,9 +14,9 @@ import * as Member from '../store/member'
 import breakLines from '../lib/breakLines'
 import sortBy from '../lib/sortBy'
 import { getRoute } from '../lib/routeutil'
+import windowSize from '../lib/windowsize'
 
-export default
-function MemberList () {
+export default function MemberList () {
   const style = `
     .card { max-width: 400px; padding: 8px; min-height: 200px; }
     .card .header { padding-bottom: 8px }
@@ -34,27 +34,33 @@ function MemberList () {
       const loaded = store.members.isLoaded()
 
       const members = Object.values(store.members.members())
-        .filter(m => (!filter || Member.searchText(m).indexOf(filter) !== -1))
+        .filter(m => !filter || Member.searchText(m).indexOf(filter) !== -1)
         .filter(m => !!m.sortName)
         .sort(sortBy(m => m.sortName))
 
       return classify(
         stylish(style),
-        'scrim',
-        m('div',
-          !loaded && m('div.loading',
-            m(Typography.Headline6, 'Loading...')),
+        <div className='scrim'>
+          {!loaded && (
+            <div className='loading'>
+              <Typography headline6>Loading...</Typography>
+            </div>
+          )}
 
-          loaded && !members.length && m('div.no-match',
-            m(Typography.Body1, 'There are no members that match')
-          ),
+          {loaded && !members.length && (
+            <div className='no-match'>
+              <Typography body1>There are no members that match</Typography>
+            </div>
+          )}
 
-          loaded && members.length && m(LayoutGrid,
-            members.map(member =>
-              m(MemberCard, { member, key: member.id })
-            )
-          )
-        )
+          {members.length && (
+            <LayoutGrid>
+              {members.map(member => (
+                <MemberCard key={member.id} member={member} />
+              ))}
+            </LayoutGrid>
+          )}
+        </div>
       )
     }
   }
@@ -62,51 +68,52 @@ function MemberList () {
 
 const MemberCard = {
   view ({ attrs: { member } }) {
-    return m(LayoutGrid.Cell,
-      { cols: 4 },
-      m(Card, { className: 'card' },
-        m('div.header',
-          m(Typography.Headline6, member.sortName)
-        ),
+    const cols = windowSize.isExtraLarge ? 3 : 4
+    return (
+      <LayoutGrid.Cell cols={cols}>
+        <Card className='card'>
+          <div className='header'>
+            <Typography headline6>{member.sortName}</Typography>
+          </div>
 
-        m('div.body',
-          m('span.rhs',
-            breakLines([
-              [
-                Member.isLife(member) && 'favorite_border',
-                Member.isJoint(member) && 'people',
-                Member.isCorporate(member) && 'business_center'
-              ].filter(Boolean)
-                .map(n => m(Icon, n)),
+          <div className='body'>
+            <span className='rhs'>
+              {breakLines(
+                [
+                  [
+                    Member.isLife(member) && 'favorite_border',
+                    Member.isJoint(member) && 'people',
+                    Member.isCorporate(member) && 'business_center'
+                  ]
+                    .filter(Boolean)
+                    .map(n => <Icon>{n}</Icon>),
 
-              member.tel && m(Typography.Body2,
-                { className: 'contact' },
-                member.tel
-              )
-            ].filter(Boolean))
-          ),
+                  member.tel && (
+                    <Typography body2 className='contact'>
+                      {member.tel}
+                    </Typography>
+                  )
+                ].filter(Boolean)
+              )}
+            </span>
 
-          m(Typography.Body2,
-            { className: 'address' },
-            breakLines(
-              member.address.split('\n')
-            )
-          )
-        ),
+            <Typography body2 className='address'>
+              {breakLines(member.address.split('\n'))}
+            </Typography>
+          </div>
 
-        m(Card.Actions,
-          { className: 'actions' },
-          m(Card.ActionIcons,
-            m(Card.ActionIcon,
-              {
-                href: `/member/${member.id}`,
-                xattrs: { oncreate: m.route.link }
-              },
-              'more_horiz'
-            )
-          )
-        )
-      )
+          <Card.Actions className='actions'>
+            <Card.ActionIcons>
+              <Card.ActionIcon
+                href={`/member/${member.id}`}
+                xattrs={{ oncreate: m.route.link }}
+              >
+                more_horiz
+              </Card.ActionIcon>
+            </Card.ActionIcons>
+          </Card.Actions>
+        </Card>
+      </LayoutGrid.Cell>
     )
   }
 }

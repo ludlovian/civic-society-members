@@ -2,8 +2,7 @@
 
 import Trigger from './trigger'
 
-export default
-function PQueue ({ concurrency = 1, limit = Infinity } = {}) {
+export default function PQueue ({ concurrency = 1, limit = Infinity } = {}) {
   // queue of yet-to-run functions
   let queue = []
   let running = 0
@@ -13,7 +12,9 @@ function PQueue ({ concurrency = 1, limit = Infinity } = {}) {
 
   function push (fn) {
     return new Promise((resolve, reject) => {
-      if (queue.length >= limit) return reject(new Error('queue limit exceeded'))
+      if (queue.length >= limit) {
+        return reject(new Error('queue limit exceeded'))
+      }
       const executor = () => {
         running++
         Promise.resolve()
@@ -56,14 +57,22 @@ function PQueue ({ concurrency = 1, limit = Infinity } = {}) {
     }
   }
 
-  function clear () { queue = [] }
+  function clear () {
+    queue = []
+  }
 
   return {
     push,
     clear,
-    get pending () { return queue.length },
-    get running () { return running },
-    get onIdle () { return idlePromise }
+    get pending () {
+      return queue.length
+    },
+    get running () {
+      return running
+    },
+    get onIdle () {
+      return idlePromise
+    }
   }
 }
 window.PQueue = PQueue

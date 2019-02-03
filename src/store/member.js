@@ -1,20 +1,15 @@
 'use strict'
 
-const searchFields = [
-  'id',
-  'sortName',
-  'address',
-  'tel',
-  'email',
-  'notes'
-]
+const searchFields = ['id', 'sortName', 'address', 'tel', 'email', 'notes']
 
 export function searchText (mbr) {
   return searchFields
-    .map(fld => String(mbr[fld] || '')
-      .replace(/[\n ]+/g, ' ')
-      .toLowerCase()
-    ).join(' ')
+    .map(fld =>
+      String(mbr[fld] || '')
+        .replace(/[\n ]+/g, ' ')
+        .toLowerCase()
+    )
+    .join(' ')
 }
 
 export const isLife = m => /^L/.test(m.type)

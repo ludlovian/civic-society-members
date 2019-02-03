@@ -43,7 +43,7 @@ function buildStyle (style) {
 
 function buildRules (style, usi) {
   style = style
-    .replace(/\s*([,>+~;:}{]{1})\s*/mg, '$1')
+    .replace(/\s*([,>+~;:}{]{1})\s*/gm, '$1')
     .trim()
     .replace(/;}/g, '}')
   const reSplit = /(.+?})/g
@@ -61,8 +61,7 @@ function buildRules (style, usi) {
   return rules
 }
 
-export default
-function stylish (style) {
+export default function stylish (style) {
   let c = context.cache[style]
   if (!c) c = context.cache[style] = buildStyle(style)
   return c

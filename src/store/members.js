@@ -31,10 +31,13 @@ export default {
     replaceMember ({ members }, member) {
       const { auth, engine } = self.root
       if (!auth.isSignedIn()) return
-      engine.onIdle()
-        .then(() => engine.execute(
-          () => backend.postMember({ member, token: auth.getToken() })
-        ))
+      engine
+        .onIdle()
+        .then(() =>
+          engine.execute(() =>
+            backend.postMember({ member, token: auth.getToken() })
+          )
+        )
       return {
         members: {
           ...members,
@@ -56,7 +59,7 @@ export default {
       self.replaceMember({
         ...member,
         ...patch,
-        history: [ ...member.history, txn ]
+        history: [...member.history, txn]
       })
     },
 
@@ -72,8 +75,8 @@ export default {
       }
       self.replaceMember({
         ...member,
-        payments: [ ...member.payments, pmt ],
-        history: [ ...member.history, txn ]
+        payments: [...member.payments, pmt],
+        history: [...member.history, txn]
       })
     },
 
@@ -96,10 +99,9 @@ export default {
     },
 
     fetchAll () {
-      return Promise.all([
-        self.fetchMembers(),
-        self.fetchFiles()
-      ]).then(() => null)
+      return Promise.all([self.fetchMembers(), self.fetchFiles()]).then(
+        () => null
+      )
     },
 
     ensureFilesLoaded ({ filesLoaded }) {
@@ -115,9 +117,13 @@ export default {
     }),
 
     addNewMember ({ members }, id) {
-      const fields = 'sortName address tel email type notes postType giftAid usualMethod'.split(' ')
+      const fields = 'sortName address tel email type notes postType giftAid usualMethod'.split(
+        ' '
+      )
       const mbr = { id }
-      fields.forEach(k => { mbr[k] = '' })
+      fields.forEach(k => {
+        mbr[k] = ''
+      })
       mbr.payments = []
       mbr.history = []
       return {

@@ -2,7 +2,7 @@
 
 const config = {
   // are we in test
-  isTest: (process.env.NODE_ENV !== 'production'),
+  isTest: process.env.NODE_ENV !== 'production',
 
   // api endpoint
   backend: 'https://us-central1-ludlow-civic-225710.cloudfunctions.net/api',

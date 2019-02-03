@@ -22,10 +22,7 @@ const styles = [
 
 const Typography = {
   view ({ children, attrs }) {
-    const {
-      className,
-      xattrs = {},
-      ...rest } = attrs
+    const { className, xattrs = {}, ...rest } = attrs
     return classify(
       className,
       styles.map(n => {
@@ -43,10 +40,7 @@ styles.forEach(n => {
   const kl = `mdc-typography--${n}`
   const comp = {
     view ({ children, attrs }) {
-      const {
-        className,
-        xattrs = {},
-        ...rest } = attrs
+      const { className, xattrs = {}, ...rest } = attrs
       return classify(
         className,
         kl,

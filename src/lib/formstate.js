@@ -5,8 +5,7 @@ import dedupe from './dedupe'
 
 import dayjs from 'dayjs'
 
-export
-class FieldState {
+export class FieldState {
   constructor (value) {
     // internal state
     this._state = valoo({})
@@ -21,14 +20,28 @@ class FieldState {
     this.$ = value
   }
 
-  get $ () { return this._state().$ }
-  get value () { return this._state().value }
-  get error () { return this._state().error || '' }
-  get dirty () { return this._state().dirty || false }
-  get validated () { return this._state().validated || false }
-  get hasError () { return Boolean(this.error) }
+  get $ () {
+    return this._state().$
+  }
+  get value () {
+    return this._state().value
+  }
+  get error () {
+    return this._state().error || ''
+  }
+  get dirty () {
+    return this._state().dirty || false
+  }
+  get validated () {
+    return this._state().validated || false
+  }
+  get hasError () {
+    return Boolean(this.error)
+  }
 
-  _apply (update) { this._state({ ...this._state(), ...update }) }
+  _apply (update) {
+    this._state({ ...this._state(), ...update })
+  }
   set $ (v) {
     this._apply({
       $: v,
@@ -40,8 +53,14 @@ class FieldState {
   //
   // sets the validators for this field
   //
-  validators (...fns) { this._validators = fns; return this }
-  parser (fn) { this._parser = fn; return this }
+  validators (...fns) {
+    this._validators = fns
+    return this
+  }
+  parser (fn) {
+    this._parser = fn
+    return this
+  }
   formatter (fn) {
     this._formatter = fn
     this.$ = this.$ // reformat
@@ -54,7 +73,10 @@ class FieldState {
   async validate () {
     const update = { error: '', validated: true }
     const value = this.value
-    this._validators.find(fn => { update.error = fn(value) || ''; return update.error })
+    this._validators.find(fn => {
+      update.error = fn(value) || ''
+      return update.error
+    })
     if (!update.error) {
       update.$ = parse(value, this._parser)
       update.value = format(update.$, this._formatter)
@@ -72,8 +94,7 @@ class FieldState {
   }
 }
 
-export
-class FormState {
+export class FormState {
   constructor (fields) {
     this.$ = fields
     // our own state, which is updated from the child states
@@ -87,30 +108,44 @@ class FormState {
     const { dirty, error, validated } = this
     return { dirty, error, validated }
   }
-  get _fields () { return Object.values(this.$) }
-  get dirty () { return this._fields.some(f => f.dirty) }
-  get validated () { return this._fields.every(f => f.validated) }
-  get error () { return this._fields.map(f => f.error).find(Boolean) }
-  get hasError () { return !!this.error }
+  get _fields () {
+    return Object.values(this.$)
+  }
+  get dirty () {
+    return this._fields.some(f => f.dirty)
+  }
+  get validated () {
+    return this._fields.every(f => f.validated)
+  }
+  get error () {
+    return this._fields.map(f => f.error).find(Boolean)
+  }
+  get hasError () {
+    return !!this.error
+  }
 
-  validate () { return Promise.all(this._fields.map(f => f.validate())) }
+  validate () {
+    return Promise.all(this._fields.map(f => f.validate()))
+  }
 
   set (values) {
-    Object.entries(this.$).forEach(([k, f]) => { f.$ = values[k] })
+    Object.entries(this.$).forEach(([k, f]) => {
+      f.$ = values[k]
+    })
   }
 
   getValues () {
-    return Object.entries(this.$).reduce(
-      (o, [k, f]) => { o[k] = f.$; return o },
-      {}
-    )
+    return Object.entries(this.$).reduce((o, [k, f]) => {
+      o[k] = f.$
+      return o
+    }, {})
   }
 
   getChanges () {
-    return Object.entries(this.$).reduce(
-      (o, [k, f]) => { if (f.dirty) o[k] = f.$; return o },
-      {}
-    )
+    return Object.entries(this.$).reduce((o, [k, f]) => {
+      if (f.dirty) o[k] = f.$
+      return o
+    }, {})
   }
 }
 
@@ -122,26 +157,27 @@ function format (value, formatter) {
   return typeof formatter === 'function' ? formatter(value) : String(value)
 }
 
-export
-const validators = {
+export const validators = {
   required: val => !val.trim() && 'Value required',
   email: val => !/.+@.+\..+/i.test(val) && 'Enter a valid email address',
   date: val => !dayjs(val).isValid() && 'Enter a valid date',
-  currency: val => !/^£?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{0,2})?$/.test(val) &&
+  currency: val =>
+    !/^£?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{0,2})?$/.test(val) &&
     'Enter a valid amount'
 }
 
-export
-const formatters = {
+export const formatters = {
   date: v => dayjs(v).format('YYYY-MM-DD'),
-  currency: v => v.toLocaleString(undefined,
-    { style: 'currency', currency: 'GBP' }),
+  currency: v =>
+    v.toLocaleString(undefined, { style: 'currency', currency: 'GBP' }),
   boolean: v => String(v)
 }
 
-export
-const parsers = {
-  date: txt => dayjs(txt).startOf('day').toDate(),
+export const parsers = {
+  date: txt =>
+    dayjs(txt)
+      .startOf('day')
+      .toDate(),
   currency: txt => parseFloat(txt.toString().replace(/[£,]/g, '')),
-  boolean: txt => ({ '': '', 'true': true, 'false': false }[txt])
+  boolean: txt => ({ '': '', true: true, false: false }[txt])
 }

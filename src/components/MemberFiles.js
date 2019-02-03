@@ -13,8 +13,7 @@ import sortBy from '../lib/sortBy'
 
 dayjs.extend(advancedFormat)
 
-export default
-function MemberFiles () {
+export default function MemberFiles () {
   const style = `
     :self { padding: 24px; }
     table { width: 100%; border-collapse: collapse; }
@@ -25,52 +24,51 @@ function MemberFiles () {
 
   return {
     view ({ attrs: { member } }) {
-      const files = member.files.slice()
-        .sort(sortBy(f => f.date))
+      const files = member.files.slice().sort(sortBy(f => f.date))
 
       return classify(
         stylish(style),
-        m('div',
-          m('table',
-            m('thead',
-              m('tr',
-                'Date,File'.split(',').map(t =>
-                  m('th', m(Typography.Headline6, t))
-                )
-              )
-            ),
+        <div>
+          <table>
+            <thead>
+              <tr>
+                {'Date,File'.split(',').map(t => (
+                  <th>
+                    <Typography headline6>{t}</Typography>
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-            m('tbody',
-              !files.length && m('tr',
-                m('td',
-                  { colspan: 2 },
-                  m(Typography.Body1,
-                    'No files recorded for this member'
-                  )
-                )
-              ),
+            <tbody>
+              {!files.length && (
+                <tr>
+                  <td colspan='2'>
+                    <Typography body1>
+                      No files recorded for this member
+                    </Typography>
+                  </td>
+                </tr>
+              )}
 
-              files.map(f =>
-                m('tr',
-                  m('td',
-                    m(Typography.Body1,
-                      dayjs(f.date).format('Do MMM YY')
-                    )
-                  ),
+              {files.map(f => (
+                <tr>
+                  <td>
+                    <Typography body1>
+                      {dayjs(f.date).format('Do MMM YY')}
+                    </Typography>
+                  </td>
 
-                  m('td',
-                    m('a',
-                      { href: f.link },
-                      m(Typography.Body1,
-                        f.type
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
+                  <td>
+                    <a href={f.link}>
+                      <Typography body1>{f.type}</Typography>
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )
     }
   }

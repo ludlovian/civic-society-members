@@ -1,7 +1,6 @@
 'use strict'
 
-export default
-function Trigger () {
+export default function Trigger () {
   let res
   let rej
   const p = new Promise((resolve, reject) => {

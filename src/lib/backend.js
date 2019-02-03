@@ -4,8 +4,7 @@ import m from 'mithril'
 import config from '../config'
 import { decompressFromBase64 } from 'lz-string'
 
-export
-function authUser (creds) {
+export function authUser (creds) {
   return callBackend({
     resource: '/auth',
     method: 'POST',
@@ -13,8 +12,7 @@ function authUser (creds) {
   })
 }
 
-export
-async function fetchMembers ({ token }) {
+export async function fetchMembers ({ token }) {
   const query = { fmt: 'lzs' }
   const data = await callBackend({
     resource: '/members',
@@ -25,8 +23,7 @@ async function fetchMembers ({ token }) {
   return JSON.parse(decompressFromBase64(data.lzs))
 }
 
-export
-async function fetchFiles ({ token }) {
+export async function fetchFiles ({ token }) {
   const query = { fmt: 'lzs' }
   const data = await callBackend({
     resource: '/files',
@@ -37,16 +34,14 @@ async function fetchFiles ({ token }) {
   return JSON.parse(decompressFromBase64(data.lzs))
 }
 
-export
-function fetchConfig () {
+export function fetchConfig () {
   return callBackend({
     resource: '/config',
     method: 'GET'
   })
 }
 
-export
-function postMember ({ token, member }) {
+export function postMember ({ token, member }) {
   return callBackend({
     resource: '/member',
     method: 'POST',
@@ -56,13 +51,7 @@ function postMember ({ token, member }) {
 }
 
 function callBackend (options) {
-  const {
-    resource,
-    method,
-    data = {},
-    token,
-    query = {}
-  } = options
+  const { resource, method, data = {}, token, query = {} } = options
 
   const opts = {
     method,

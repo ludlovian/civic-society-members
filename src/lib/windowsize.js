@@ -28,11 +28,25 @@ function inRange (from, to) {
 }
 
 export default {
-  get measured () { return windowSize().measured },
-  get width () { return windowSize().width },
-  get height () { return windowSize().height },
-  get isSmall () { return inRange(0, 640) },
-  get isMedium () { return inRange(640, 1024) },
-  get isLarge () { return inRange(1024, 1250) },
-  get isExtraLarge () { return inRange(1250, Infinity) }
+  get measured () {
+    return windowSize().measured
+  },
+  get width () {
+    return windowSize().width
+  },
+  get height () {
+    return windowSize().height
+  },
+  get isSmall () {
+    return inRange(0, 640)
+  },
+  get isMedium () {
+    return inRange(640, 1024)
+  },
+  get isLarge () {
+    return inRange(1024, 1250)
+  },
+  get isExtraLarge () {
+    return inRange(1250, Infinity)
+  }
 }

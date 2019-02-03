@@ -33,7 +33,7 @@ export default {
       } else {
         _connected = new Trigger()
       }
-      return ({ connected })
+      return { connected }
     },
 
     //
@@ -43,15 +43,17 @@ export default {
     // resolves to a null update once the function has run
     //
     execute (_, fn) {
-      return _queue.push(async () => {
-        await _connected
-        self.setBusy()
-        try {
-          await Promise.resolve(fn())
-        } catch (e) {
-          self.setError(e)
-        }
-      }).then(() => undefined)
+      return _queue
+        .push(async () => {
+          await _connected
+          self.setBusy()
+          try {
+            await Promise.resolve(fn())
+          } catch (e) {
+            self.setError(e)
+          }
+        })
+        .then(() => undefined)
     },
 
     onInit () {
@@ -71,10 +73,7 @@ export default {
     isActive: ({ busy }) => !self.hasError() && busy,
     onIdle: () => _queue.onIdle,
     onConnected: () => _connected,
-    getStatus: ({ busy, connected, error }) => (
-      error ? 'error'
-        : !connected ? 'disconnected'
-          : busy ? 'busy'
-            : 'idle')
+    getStatus: ({ busy, connected, error }) =>
+      error ? 'error' : !connected ? 'disconnected' : busy ? 'busy' : 'idle'
   })
 }

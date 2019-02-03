@@ -1,7 +1,6 @@
 'use strict'
 
-export default
-function valoo (value) {
+export default function valoo (value) {
   const listeners = []
   function func () {
     if (arguments.length) {
@@ -12,7 +11,9 @@ function valoo (value) {
   }
   func.on = cb => {
     const i = listeners.push(cb) - 1
-    return () => { listeners[i] = undefined }
+    return () => {
+      listeners[i] = undefined
+    }
   }
   return func
 }

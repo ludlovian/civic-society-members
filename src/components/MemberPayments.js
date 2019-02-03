@@ -15,10 +15,15 @@ import pdsp from '../lib/pdsp'
 import { getRoute, setRoute } from '../lib/routeutil'
 
 import Field from './Field'
-import { FormState, FieldState, validators, formatters, parsers } from '../lib/formstate'
+import {
+  FormState,
+  FieldState,
+  validators,
+  formatters,
+  parsers
+} from '../lib/formstate'
 
-export default
-function MemberPayments () {
+export default function MemberPayments () {
   const style = `
     :self { padding: 16px }
     table { width: 100%; border-collapse: collapse; }
@@ -56,7 +61,7 @@ function MemberPayments () {
 
   async function onsave (e) {
     pdsp(e)
-    await (form.validate())
+    await form.validate()
     if (form.hasError) return null
     store.members.addPayment(member, form.getValues())
     const route = getRoute()
@@ -69,9 +74,7 @@ function MemberPayments () {
       member = attrs.member
       const route = getRoute()
       const isAdding = 'add' in route.query
-      const payments = member.payments
-        .slice()
-        .sort(sortBy(pmt => pmt.date))
+      const payments = member.payments.slice().sort(sortBy(pmt => pmt.date))
 
       // stash the last payment away each time, so we can use
       // it as a template for the form
@@ -79,77 +82,66 @@ function MemberPayments () {
 
       return classify(
         stylish(style),
-        m('div',
-          m('table',
-            m('thead',
-              m('tr',
-                'Date|Amount|Paid by'.split('|').map(t =>
-                  m('th',
-                    m(Typography.Headline6, t)
-                  )
-                )
-              )
-            ), // thead
+        <div>
+          <table>
+            <thead>
+              <tr>
+                {'Date|Amount|Paid by'.split('|').map(t => (
+                  <Typography headline6>{t}></Typography>
+                ))}
+              </tr>
+            </thead>
 
-            m('tbody',
-              !payments.length && m('tr',
-                m('td',
-                  { colspan: 3 },
-                  m(Typography.Body1,
-                    'No payments recorded'
-                  )
-                )
-              ),
+            <tbody>
+              {!payments.length && (
+                <tr>
+                  <td colspan='3'>
+                    <Typography body1>No payments recorded</Typography>
+                  </td>
+                </tr>
+              )}
 
-              payments.map(pmt =>
-                m('tr',
-                  { className: 'payment' },
-                  m('td',
-                    m(Typography.Body1,
-                      dayjs(pmt.date).format('Do MMM YY')
-                    )
-                  ),
+              {payments.map(pmt => (
+                <tr className='payment'>
+                  <td>
+                    <Typography body1>
+                      {dayjs(pmt.date).format('Do MMM YY')}
+                    </Typography>
+                  </td>
 
-                  m('td',
-                    m(Typography.Body1,
-                      formatters.currency(pmt.amount)
-                    )
-                  ),
+                  <td>
+                    <Typography body1>
+                      {formatters.currency(pmt.amount)}
+                    </Typography>
+                  </td>
 
-                  m('td',
-                    m(Typography.Body1,
-                      pmt.method
-                    )
-                  )
-                )
-              ),
+                  <td>
+                    <Typography body1>{pmt.method}</Typography>
+                  </td>
+                </tr>
+              ))}
 
-              isAdding && m(NewPayment, { form })
-            ) // tbody
-          ), // table
+              {isAdding && <NewPayment form={form} />}
+            </tbody>
+          </table>
 
-          m(Card.Actions,
-            { className: 'buttons' },
-            isAdding && m(Button,
-              {
-                key: 'cancel',
-                ripple: true,
-                xattrs: { onclick: oncancel }
-              },
-              'Cancel'
-            ),
+          <Card.Actions className='buttons'>
+            {isAdding && (
+              <Button key='cancel' ripple xattrs={{ onclick: oncancel }}>
+                Cancel
+              </Button>
+            )}
 
-            m(Button,
-              {
-                key: 'add',
-                ripple: true,
-                raised: isAdding,
-                xattrs: { onclick: isAdding ? onsave : onedit }
-              },
-              'Add'
-            )
-          ) // Card.Actions
-        ) // div
+            <Button
+              key='add'
+              ripple
+              raised={isAdding}
+              xattrs={{ onclick: isAdding ? onsave : onedit }}
+            >
+              Add
+            </Button>
+          </Card.Actions>
+        </div>
       )
     }
   }
@@ -157,36 +149,31 @@ function MemberPayments () {
 
 const NewPayment = {
   view ({ attrs: { form } }) {
-    return m('tr',
-      { className: 'new-payment' },
-      m('td',
-        m(Field, {
-          label: 'Date',
-          type: 'date',
-          fieldState: form.$.date
-        })
-      ),
+    return (
+      <tr className='new-payment'>
+        <td>
+          <Field label='Date' type='date' fieldState={form.$.date} />
+        </td>
 
-      m('td',
-        m(Field, {
-          label: 'Amount',
-          fieldState: form.$.amount
-        })
-      ),
+        <td>
+          <Field label='Amount' fieldState={form.$.amount} />
+        </td>
 
-      m('td',
-        m(Field, {
-          label: 'Paid by',
-          fieldState: form.$.method
-        })
-      )
-    ) // tr
+        <td>
+          <Field label='Paid by' fieldState={form.$.method} />
+        </td>
+      </tr>
+    )
   }
 }
 
 function getForm (pmt) {
   return new FormState({
-    date: new FieldState(dayjs().startOf('day').toDate())
+    date: new FieldState(
+      dayjs()
+        .startOf('day')
+        .toDate()
+    )
       .validators(validators.required)
       .parser(parsers.date)
       .formatter(formatters.date),

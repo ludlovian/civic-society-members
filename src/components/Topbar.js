@@ -33,33 +33,31 @@ export default {
   view ({ attrs: { onNav, includeSearch } }) {
     return classify(
       stylish(style),
-      m(TopAppBar, { fixed: true, onNav },
-        m(TopAppBar.Row,
-          m(TopAppBar.Section, { alignStart: true },
-            m(TopAppBar.Icon, { navigation: true }, 'menu'),
+      <TopAppBar fixed onNav={onNav}>
+        <TopAppBar.Row>
+          <TopAppBar.Section alignStart>
+            <TopAppBar.Icon navigation>menu</TopAppBar.Icon>
 
-            classify(
-              'title',
-              m(Typography.Headline5,
-                { xattrs: { onclick: store.members.fetchAll } },
-                windowSize.isSmall ? 'LCS' : 'Ludlow Civic Society'
-              )
-            ),
+            <Typography
+              className='title'
+              headline5
+              xattrs={{ onclick: store.members.fetchAll }}
+            >
+              {windowSize.isSmall ? 'LCS' : 'Ludlow Civic Society'}
+            </Typography>
 
-            config.isTest && classify(
-              'test',
-              m(Typography.Body1, '(test)')
-            ),
+            {config.isTest && (
+              <Typography className='test' body1>
+                (test)
+              </Typography>
+            )}
 
-            classify(
-              'engine-status',
-              m(EngineStatus)
-            )
-          ),
+            <EngineStatus className='engine-status' />
+          </TopAppBar.Section>
 
-          includeSearch && m(MemberSearch)
-        )
-      )
+          {includeSearch && <MemberSearch />}
+        </TopAppBar.Row>
+      </TopAppBar>
     )
   }
 }
@@ -67,19 +65,23 @@ export default {
 function EngineStatus () {
   const states = {
     idle: [],
-    busy: [ 'sync' ],
-    disconnected: [ 'cloud_off' ],
-    error: [ 'error', '/error' ]
+    busy: ['sync'],
+    disconnected: ['cloud_off'],
+    error: ['error', '/error']
   }
 
   return {
     view ({ attrs }) {
       const status = store.engine.getStatus()
-      let [ icon, target ] = states[status]
+      let [icon, target] = states[status]
       if (!icon) return false
-      icon = m(Icon, attrs, icon)
+      icon = <Icon {...attrs}>{icon}</Icon>
       if (!target) return icon
-      return m('a', { href: target, oncreate: m.route.link }, icon)
+      return (
+        <a href={target} oncreate={m.route.link}>
+          {icon}
+        </a>
+      )
     }
   }
 }

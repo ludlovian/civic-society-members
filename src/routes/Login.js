@@ -13,8 +13,7 @@ import { FormState, FieldState, validators } from '../lib/formstate'
 import pdsp from '../lib/pdsp'
 import Field from '../components/Field'
 
-export default
-function Login () {
+export default function Login () {
   const style = `
     :self.scrim { padding: 16px; }
     .card { padding: 16px; max-width: 400px; margin: auto; }
@@ -26,10 +25,11 @@ function Login () {
   `
 
   const form = new FormState({
-    username: new FieldState('')
-      .validators(validators.required, validators.email),
-    password: new FieldState('')
-      .validators(validators.required)
+    username: new FieldState('').validators(
+      validators.required,
+      validators.email
+    ),
+    password: new FieldState('').validators(validators.required)
   })
 
   let active = valoo(false)
@@ -57,46 +57,48 @@ function Login () {
   return {
     view () {
       const isActive = active()
-      return classify('scrim', stylish(style),
-        m('div',
-          classify('card',
-            m(Card,
-              m('div.header',
-                m('div', m(Typography.Headline5, 'Login')),
-                m('div', m(Typography.Body1, 'You must login to use the system'))
-              ),
+      return classify(
+        stylish(style),
+        <div className='scrim'>
+          <Card className='card'>
+            <div className='header'>
+              <div>
+                <Typography headline5>Login</Typography>
+              </div>
+              <div>
+                <Typography body1>You must login to use the system</Typography>
+              </div>
+            </div>
 
-              m('form.form',
-                classify('field', m(Field, {
-                  label: 'Email address',
-                  fieldState: form.$.username,
-                  xattrs: { autofocus: true }
-                })),
+            <form className='form'>
+              <Field
+                className='field'
+                label='Email address'
+                fieldState={form.$.username}
+                autofocus
+              />
 
-                classify('field', m(Field, {
-                  label: 'Password',
-                  fieldState: form.$.password,
-                  type: 'password'
-                })),
+              <Field
+                className='field'
+                label='Password'
+                fieldState={form.$.password}
+                type='password'
+              />
 
-                classify('buttons',
-                  m(Card.Actions,
-                    m(Card.ActionButton,
-                      {
-                        primary: true,
-                        default: true,
-                        ripple: true,
-                        disabled: isActive,
-                        xattrs: { onclick: doLogin }
-                      },
-                      isActive ? 'Logging in...' : 'Login'
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
+              <Card.Actions className='buttons'>
+                <Card.ActionButton
+                  primary
+                  default
+                  ripple
+                  disabled={isActive}
+                  onclick={doLogin}
+                >
+                  {isActive ? 'Logging in...' : 'Login'}
+                </Card.ActionButton>
+              </Card.Actions>
+            </form>
+          </Card>
+        </div>
       )
     }
   }

@@ -4,10 +4,9 @@ import m from 'mithril'
 
 import { MDCRipple } from '@material/ripple'
 
-import classify from '../../lib/classify'
+import { classnames } from '../../lib/classify'
 
-export default
-function Button () {
+export default function Button () {
   let control
   return {
     oncreate ({ dom, attrs: { ripple } }) {
@@ -30,25 +29,22 @@ function Button () {
         primary,
         secondary,
         xattrs = {},
-        ...rest } = attrs
+        ...rest
+      } = attrs
 
-      return classify(
-        className,
-        'mdc-button',
-        {
-          'mdc-button--dense': dense,
-          'mdc-button--raised': raised,
-          'mdc-button--unelevated': unelevated,
-          'mdc-button--outlined': outlined,
-          'mdc-theme--primary-bg': primary,
-          'mdc-theme--secondary-bg': secondary
-        },
-        m(href ? 'a' : 'button',
-          { href, ...xattrs, ...rest },
-          m('span.mdc-button__label',
-            children
-          )
-        )
+      const El = href ? 'a' : 'button'
+      const cl = classnames(className, 'mdc-button', {
+        'mdc-button--dense': dense,
+        'mdc-button--raised': raised,
+        'mdc-button--unelevated': unelevated,
+        'mdc-button--outlined': outlined,
+        'mdc-theme--primary-bg': primary,
+        'mdc-theme--secondary-bg': secondary
+      })
+      return (
+        <El className={cl} {...xattrs} {...rest}>
+          <span className='mdc-button__label'>{children}</span>
+        </El>
       )
     }
   }

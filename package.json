@@ -7,6 +7,7 @@
     "start": "rm -rf dist/ && parcel serve --no-cache --public-url /civic-society-members/ --port 8080 src/index.html",
     "prebuild": "rm -rf dist/* && cp -a src/assets/* dist/",
     "build": "parcel build --no-cache --public-url /civic-society-members/ src/index.html",
+    "format": "prettier-standard \"src/**/*.js\"",
     "lint": "eslint src"
   },
   "eslintConfig": {
@@ -16,23 +17,53 @@
       "experimentalObjectRestSpread": true
     },
     "extends": [
-      "standard"
-    ]
+      "standard",
+      "standard-jsx"
+    ],
+    "settings": {
+      "react": {
+        "pragma": "m"
+      }
+    }
   },
   "eslintIgnore": [
     "build/*"
   ],
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": "> 5%, not dead"
+        }
+      ]
+    ],
+    "plugins": [
+      [
+        "@babel/plugin-transform-react-jsx",
+        {
+          "pragma": "m",
+          "pragmaFrag": "m.fragment"
+        }
+      ]
+    ]
+  },
   "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-transform-react-jsx": "^7.3.0",
     "autoprefixer": "^9.4.7",
     "babel-eslint": "^10.0.1",
     "eslint": "^5.12.0",
     "eslint-config-standard": "^12.0.0",
-    "eslint-plugin-import": "^2.14.0",
+    "eslint-config-standard-jsx": "^6.0.2",
+    "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-react": "^7.12.4",
     "eslint-plugin-standard": "^4.0.0",
     "ghpages": "0.0.10",
     "parcel-bundler": "^1.11.0",
+    "prettier-standard": "^9.1.1",
     "sass": "^1.16.1"
   },
   "dependencies": {

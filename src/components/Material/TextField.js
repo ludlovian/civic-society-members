@@ -6,10 +6,9 @@ import { MDCTextField } from '@material/textfield'
 
 import NotchedOutline from './NotchedOutline'
 import { getId } from './util'
-import classify from '../../lib/classify'
+import { classnames } from '../../lib/classify'
 
-export default
-function TextField () {
+export default function TextField () {
   let id
   let control
 
@@ -37,59 +36,59 @@ function TextField () {
         persistent,
         validationMsg,
         xattrs = {},
-        ...rest } = attrs
+        ...rest
+      } = attrs
 
-      return m('div', { className },
-        classify(
-          {
-            'mdc-text-field': true,
-            'mdc-text-field--outlined': label,
-            'mdc-text-field--textarea': type === 'textarea',
-            'mdc-text-field--disabled': disabled
-          },
-          m('div',
-            m(type === 'textarea' ? 'textarea' : 'input',
-              {
-                ...xattrs,
-                ...rest,
-                className: 'mdc-text-field__input',
-                value,
-                type: type === 'textarea' ? undefined : type,
-                id,
-                disabled,
-                'aria-controls': helperText !== undefined && `${id}-helper-text`
-              }
-            ),
+      const cl = classnames('mdc-text-field', {
+        'mdc-text-field--outlined': label,
+        'mdc-text-field--textarea': type === 'textarea',
+        'mdc-text-field--disabled': disabled
+      })
 
-            label && m(NotchedOutline,
-              classify(
-                {
-                  'mdc-floating-label': true,
-                  'mdc-floating-label--float-above': value
-                },
-                m('label',
-                  { for: id },
-                  label
-                )
-              )
-            )
-          )
-        ),
+      const Elem = type === 'textarea' ? 'textarea' : 'input'
 
-        helperText !== undefined && classify(
-          {
-            'mdc-text-field-helper-text': true,
-            'mdc-text-field-helper-text--persistent': persistent,
-            'mdc-text-field-helper-text--validation-msg': validationMsg
-          },
-          m('p',
-            {
-              'aria-hidden': true,
-              id: `${id}-helper-text`
-            },
-            helperText
-          )
-        )
+      const clLabel = classnames('mdc-floating-label', {
+        'mdc-floating-label--float-above': value
+      })
+
+      const clHelperText = classnames('mdc-text-field-helper-text', {
+        'mdc-text-field-helper-text--persistent': persistent,
+        'mdc-text-field-helper-text--validation-msg': validationMsg
+      })
+
+      return (
+        <div className={className}>
+          <div className={cl}>
+            <Elem
+              className='mdc-text-field__input'
+              {...xattrs}
+              {...rest}
+              value={value}
+              id={id}
+              type={type !== 'textarea' && type}
+              disabled={disabled}
+              aria-controls={helperText !== undefined && `${id}-helper-text`}
+            />
+
+            {label && (
+              <NotchedOutline>
+                <label className={clLabel} for={id}>
+                  {label}
+                </label>
+              </NotchedOutline>
+            )}
+          </div>
+
+          {helperText !== undefined && (
+            <p
+              className={clHelperText}
+              aria-hidden='true'
+              id={`${id}-helper-text`}
+            >
+              {helperText}
+            </p>
+          )}
+        </div>
       )
     }
   }

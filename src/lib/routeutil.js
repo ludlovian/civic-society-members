@@ -4,8 +4,7 @@ import m from 'mithril'
 
 const reRoute = /([^?#]*)(?:\?([^#]*))?(?:#(.*))?/
 
-export
-function getRoute () {
+export function getRoute () {
   const match = reRoute.exec(m.route.get())
   return {
     path: match[1],
@@ -14,9 +13,9 @@ function getRoute () {
   }
 }
 
-export
-function setRoute ({ path, query, fragment }, { replace = false } = {}) {
-  const s = (path || '') +
+export function setRoute ({ path, query, fragment }, { replace = false } = {}) {
+  const s =
+    (path || '') +
     (query ? '?' + m.buildQueryString(query) : '') +
     (fragment ? '#' + fragment : '')
   m.route.set(s, null, { replace })
