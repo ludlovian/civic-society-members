@@ -4,29 +4,40 @@ import m from 'mithril'
 
 import { MDCTopAppBar } from '@material/top-app-bar/index'
 
-import classify from '../../lib/classify'
+import { classnames } from '../../lib/classify'
 
 export default function TopAppBar () {
   let control
+  let _onNav
+
+  function onNav (e) {
+    if (_onNav) _onNav(e)
+  }
 
   return {
-    oncreate ({ dom, attrs: { onNav } }) {
+    oncreate ({ dom }) {
       control = new MDCTopAppBar(dom)
-      if (onNav) control.listen('MDCTopAppBar:nav', onNav)
+      control.listen('MDCTopAppBar:nav', onNav)
     },
 
-    onremove ({ attrs: { onNav } }) {
-      if (onNav) control.unlisten('MDCTopAppBar:nav', onNav)
+    onremove () {
+      control.unlisten('MDCTopAppBar:nav', onNav)
       control.destroy()
     },
 
     view ({ children, attrs }) {
-      const { className, fixed, xattrs = {}, ...rest } = attrs
-      return classify(
+      const { className, fixed, onNav, xattrs = {}, ...rest } = attrs
+      _onNav = onNav
+      const cl = classnames(
         className,
         'mdc-top-app-bar',
-        { 'mdc-top-app-bar--fixed': fixed },
-        m('header', { ...xattrs, ...rest }, children)
+        fixed && 'mdc-top-app-bar--fixed'
+      )
+
+      return (
+        <header className={cl} {...xattrs} {...rest}>
+          {children}
+        </header>
       )
     }
   }
@@ -35,10 +46,12 @@ export default function TopAppBar () {
 TopAppBar.Row = {
   view ({ children, attrs }) {
     const { className, xattrs = {}, ...rest } = attrs
-    return classify(
-      className,
-      'mdc-top-app-bar__row',
-      m('div', { ...xattrs, ...rest }, children)
+    const cl = classnames(className, 'mdc-top-app-bar__row')
+
+    return (
+      <div className={cl} {...xattrs} {...rest}>
+        {children}
+      </div>
     )
   }
 }
@@ -46,14 +59,17 @@ TopAppBar.Row = {
 TopAppBar.Section = {
   view ({ children, attrs }) {
     const { className, alignStart, alignEnd, xattrs = {}, ...rest } = attrs
-    return classify(
+    const cl = classnames(
       className,
       'mdc-top-app-bar__section',
-      {
-        'mdc-top-app-bar__section--align-start': alignStart,
-        'mdc-top-app-bar__section--align-end': alignEnd
-      },
-      m('section', { ...xattrs, ...rest }, children)
+      alignStart && 'mdc-top-app-bar__section--align-start',
+      alignEnd && 'mdc-top-app-bar__section--align-end'
+    )
+
+    return (
+      <section className={cl} {...xattrs} {...rest}>
+        {children}
+      </section>
     )
   }
 }
@@ -61,11 +77,16 @@ TopAppBar.Section = {
 TopAppBar.Icon = {
   view ({ children, attrs }) {
     const { className, navigation, xattrs = {}, ...rest } = attrs
-    return classify(
+    const cl = classnames(
       className,
       'material-icons',
-      { 'mdc-top-app-bar__navigation-icon': navigation },
-      m('a', { ...xattrs, ...rest }, children)
+      navigation && 'mdc-top-app-bar__navigation-icon'
+    )
+
+    return (
+      <a className={cl} {...xattrs} {...rest}>
+        {children}
+      </a>
     )
   }
 }

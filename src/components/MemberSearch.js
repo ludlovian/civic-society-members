@@ -4,7 +4,7 @@ import m from 'mithril'
 
 import TopAppBar from './Material/TopAppBar'
 
-import classify, { classnames } from '../lib/classify'
+import { classnames } from '../lib/classify'
 import valoo from '../lib/valoo'
 import stylish from '../lib/stylish'
 import pdsp from '../lib/pdsp'
@@ -54,19 +54,20 @@ export default function MemberSearch () {
     },
 
     view () {
-      return classify(
-        stylish(style),
-        <TopAppBar.Section alignEnd>
+      const clStyle = classnames(stylish(style))
+      const clInput = classnames(
+        'text-input',
+        'mdc-text-field',
+        expanded() ? 'expanded' : 'collapsed'
+      )
+
+      return (
+        <TopAppBar.Section className={clStyle} alignEnd>
           <TopAppBar.Icon className='icon' xattrs={{ onclick: onClickIcon }}>
             search
           </TopAppBar.Icon>
 
-          <div
-            className={classnames('text-input', 'mdc-text-field', {
-              expanded: expanded(),
-              collapsed: !expanded()
-            })}
-          >
+          <div className={clInput}>
             <input
               className='mdc-text-field__input'
               type='search'

@@ -69,7 +69,11 @@ export default function Member () {
 
               <TabBar.AutoTab tab={tab} ontabchange={ontabchange}>
                 <MemberDetails tab='Details' key={member.id} member={member} />
-                <MemberPayments tab='Payments' key={member.id} member={member} />
+                <MemberPayments
+                  tab='Payments'
+                  key={member.id}
+                  member={member}
+                />
                 <MemberFiles tab='Files' key={member.id} member={member} />
               </TabBar.AutoTab>
             ]}

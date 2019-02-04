@@ -14,7 +14,7 @@ export default {
     const list = buildList(isSignedIn, url)
 
     return (
-      <Drawer open={open} close={onClose}>
+      <Drawer open={open} onClose={onClose}>
         <Drawer.Header title='Menu' />
         <Drawer.Content>{renderList(list, onClose)}</Drawer.Content>
       </Drawer>

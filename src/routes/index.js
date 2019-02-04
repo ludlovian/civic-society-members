@@ -13,8 +13,6 @@ import MemberList from './MemberList'
 import Member from './Member'
 import Spreadsheet from './Spreadsheet'
 
-// const Member = { view: vnode => m('h3', `Member: ${JSON.stringify(vnode.attrs)}`) }
-
 const { isSignedIn } = store.auth
 
 export default {
@@ -27,32 +25,54 @@ export default {
   '/:url': route(NotFound)
 }
 
-function authRoute (comp, includeSearch = false) {
+function authRoute (Comp, includeSearch = false) {
   return {
     render (vnode) {
       if (isSignedIn()) {
-        return m(Layout, { includeSearch }, m(comp, vnode.attrs))
+        return (
+          <Layout includeSearch={includeSearch}>
+            <Comp {...vnode.attrs} />
+          </Layout>
+        )
       }
       m.route.set('/login')
-      return m(Layout, m(Login))
+      return (
+        <Layout>
+          <Login />
+        </Layout>
+      )
     }
   }
 }
 
-function route (comp) {
+function route (Comp) {
   return {
     render (vnode) {
-      return m(Layout, m(comp, vnode.attrs))
+      return (
+        <Layout>
+          <Comp {...vnode.attrs} />
+        </Layout>
+      )
     }
   }
 }
 
-function unauthRoute (comp) {
+function unauthRoute (Comp) {
   return {
     render (vnode) {
-      if (!isSignedIn()) return m(Layout, m(comp, vnode.attrs))
+      if (!isSignedIn()) {
+        return (
+          <Layout>
+            <Comp {...vnode.attrs} />
+          </Layout>
+        )
+      }
       m.route.set('/')
-      return m(Layout, { includeSearch: true }, m(MemberList, vnode.attrs))
+      return (
+        <Layout includeSearch>
+          <MemberList />
+        </Layout>
+      )
     }
   }
 }

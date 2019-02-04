@@ -5,7 +5,7 @@ import m from 'mithril'
 import { MDCDrawer } from '@material/drawer'
 import Icon from './Icon'
 
-import classify from '../../lib/classify'
+import { classnames } from '../../lib/classify'
 
 export default function Drawer () {
   let control
@@ -27,16 +27,14 @@ export default function Drawer () {
     },
 
     view ({ children, attrs }) {
-      const { className, xattrs = {}, ...rest } = attrs
-      return classify(
-        className,
-        'mdc-drawer-container',
-        m(
-          'div',
-          { ...xattrs, ...rest },
-          classify('mdc-drawer', 'mdc-drawer--modal', m('aside', children)),
-          classify('mdc-drawer-scrim', m('div'))
-        )
+      const { className, open, onOpen, onClose, xattrs = {}, ...rest } = attrs
+      const cl = classnames(className, 'mdc-drawer-container')
+
+      return (
+        <div className={cl} {...xattrs} {...rest}>
+          <aside className='mdc-drawer mdc-drawer--modal'>{children}</aside>
+          <div className='mdc-drawer-scrim' />
+        </div>
       )
     }
   }
@@ -45,16 +43,14 @@ export default function Drawer () {
 Drawer.Header = {
   view ({ children, attrs }) {
     const { className, title, subtitle, xattrs = {}, ...rest } = attrs
-    return classify(
-      className,
-      'mdc-drawer__header',
-      m(
-        'div',
-        { ...xattrs, ...rest },
-        title && m('h3.mdc-drawer__title', title),
-        subtitle && m('h6.mdc-drawer__subtitle', subtitle),
-        children
-      )
+    const cl = classnames(className, 'mdc-drawer__header')
+
+    return (
+      <div className={cl} {...xattrs} {...rest}>
+        {title && <h3 className='mdc-drawer__title'>{title}</h3>}
+        {subtitle && <h6 className='mdc-drawer__subtitle'>{subtitle}</h6>}
+        {children}
+      </div>
     )
   }
 }
@@ -62,10 +58,12 @@ Drawer.Header = {
 Drawer.Content = {
   view ({ children, attrs }) {
     const { className, xattrs = {}, ...rest } = attrs
-    return classify(
-      className,
-      'mdc-drawer__content',
-      m('div', { ...xattrs, ...rest }, m('nav.mdc-list', children))
+    const cl = classnames(className, 'mdc-drawer__content')
+
+    return (
+      <div className={cl} {...xattrs} {...rest}>
+        <nav className='mdc-list'>{children}</nav>
+      </div>
     )
   }
 }
@@ -73,11 +71,16 @@ Drawer.Content = {
 Drawer.Item = {
   view ({ children, attrs }) {
     const { className, selected, xattrs = {}, ...rest } = attrs
-    return classify(
+    const cl = classnames(
       className,
       'mdc-list-item',
-      { 'mdc-list-item--activated': selected },
-      m('a', { ...xattrs, ...rest, 'aria-selected': selected }, children)
+      selected && 'mdc-list-item--activated'
+    )
+
+    return (
+      <a className={cl} {...xattrs} {...rest} aria-selected={selected}>
+        {children}
+      </a>
     )
   }
 }
@@ -85,10 +88,12 @@ Drawer.Item = {
 Drawer.ItemIcon = {
   view ({ children, attrs }) {
     const { className, xattrs, ...rest } = attrs
-    return classify(
-      className,
-      'mdc-list-item__graphic',
-      m(Icon, { xattrs, ...rest, 'aria-hidden': true }, children)
+    const cl = classnames(className, 'mdc-list-item__graphic')
+
+    return (
+      <Icon className={cl} xattrs={xattrs} {...rest} aria-hidden='true'>
+        {children}
+      </Icon>
     )
   }
 }
@@ -96,10 +101,12 @@ Drawer.ItemIcon = {
 Drawer.ItemText = {
   view ({ children, attrs }) {
     const { className, xattrs = {}, ...rest } = attrs
-    return classify(
-      className,
-      'mdc-list-item--text',
-      m('span', { ...xattrs, ...rest }, children)
+    const cl = classnames(className, 'mdc-list-item--text')
+
+    return (
+      <span className={cl} {...xattrs} {...rest}>
+        {children}
+      </span>
     )
   }
 }

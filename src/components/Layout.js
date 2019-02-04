@@ -21,19 +21,15 @@ export default function Layout () {
 
   return {
     view ({ children, attrs: { includeSearch } }) {
-      return m(
-        'div#app',
-        m(Sidebar, {
-          open: drawerOpen(),
-          onClose: closeDrawer
-        }),
-
-        m(Topbar, {
-          onNav: openDrawer,
-          includeSearch
-        }),
-
-        m('div.mdc-top-app-bar--fixed-adjust.mdc-theme--background', children)
+      const isDrawerOpen = drawerOpen()
+      return (
+        <div id='app'>
+          <Sidebar open={isDrawerOpen} onClose={closeDrawer} />
+          <Topbar onNav={openDrawer} includeSearch={includeSearch} />
+          <div className='mdc-top-app-bar--fixed-adjust mdc-theme--background'>
+            {children}
+          </div>
+        </div>
       )
     }
   }

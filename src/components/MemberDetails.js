@@ -6,7 +6,7 @@ import Card from '../components/Material/Card'
 import Button from '../components/Material/Button'
 
 import store from '../store'
-import classify from '../lib/classify'
+import { classnames } from '../lib/classify'
 import stylish from '../lib/stylish'
 import {
   FormState,
@@ -80,9 +80,10 @@ export default function MemberDetails () {
       const isEditing = 'edit' in route.query
       if (!isEditing) form.set(member)
 
-      return classify(
-        stylish(style),
-        <div>
+      const cl = classnames(stylish(style))
+
+      return (
+        <div className={cl}>
           <form>
             <Field
               className='field'

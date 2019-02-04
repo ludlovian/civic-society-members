@@ -2,7 +2,7 @@
 
 import m from 'mithril'
 
-import classify from '../../lib/classify'
+import { classnames } from '../../lib/classify'
 
 const styles = [
   'headline1',
@@ -23,28 +23,35 @@ const styles = [
 const Typography = {
   view ({ children, attrs }) {
     const { className, xattrs = {}, ...rest } = attrs
-    return classify(
+    const cl = classnames(
       className,
-      styles.map(n => {
-        if (rest[n]) {
-          rest[n] = undefined
-          return 'mdc-typography--' + n
+      styles.map(name => {
+        if (rest[name]) {
+          delete rest[name]
+          return `mdc-typography--${name}`
         }
-      }),
-      m('span', { ...rest, ...xattrs }, children)
+        return false
+      })
+    )
+
+    return (
+      <span className={cl} {...xattrs} {...rest}>
+        {children}
+      </span>
     )
   }
 }
 
 styles.forEach(n => {
-  const kl = `mdc-typography--${n}`
+  const klass = `mdc-typography--${n}`
   const comp = {
     view ({ children, attrs }) {
       const { className, xattrs = {}, ...rest } = attrs
-      return classify(
-        className,
-        kl,
-        m('span', { ...xattrs, ...rest }, children)
+      const cl = classnames(className, klass)
+      return (
+        <span className={cl} {...xattrs} {...rest}>
+          {children}
+        </span>
       )
     }
   }
