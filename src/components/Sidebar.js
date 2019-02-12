@@ -33,7 +33,7 @@ export default function Sidebar (vm) {
 
       return (
         <Drawer open={open} {...rest}>
-          <Drawer.Header title='Menu' subtitle={'v' + version}/>
+          <Drawer.Header title='Menu' subtitle={'v' + version} />
           <Drawer.Content>
             {list.map(({ selected, href, action, icon, text }) => (
               <Drawer.Item
