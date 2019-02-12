@@ -1,30 +1,29 @@
 'use strict'
 
 export default function MediaQuery () {
+  let mql
   let matches
-  let unlisten
+  let unlisten = () => {}
+
+  function createQuery (vm, match) {
+    const mql = window.matchMedia(match)
+    matches = mql.matches
+    function onUpdate (e) {
+      matches = e.matches
+      vm.redraw()
+    }
+    mql.addListener(onUpdate)
+    unlisten = () => mql.removeListener(onUpdate)
+  }
 
   return {
     hooks: {
-      willMount (vm, { match }) {
-        const mql = window.matchMedia(match)
-        onUpdate(mql)
-
-        function onUpdate (e) {
-          matches = e.matches
-          vm.redraw()
-        }
-
-        mql.addListener(onUpdate)
-        unlisten = () => mql.removeListener(onUpdate)
-      },
-
       willUnmount () {
         unlisten()
       }
     },
-
-    render (vm, { children }) {
+    render (vm, { match, children }) {
+      if (!mql) createQuery(vm, match)
       return children[0](matches)
     }
   }
