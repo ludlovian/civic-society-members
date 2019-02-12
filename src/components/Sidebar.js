@@ -4,6 +4,7 @@ import h from '../lib/hyperscript'
 
 import Drawer from './Material/Drawer'
 
+import { version } from '../../package.json'
 import { views, actions } from '../store'
 import config from '../config'
 
@@ -32,7 +33,7 @@ export default function Sidebar (vm) {
 
       return (
         <Drawer open={open} {...rest}>
-          <Drawer.Header title='Menu' />
+          <Drawer.Header title='Menu' subtitle={'v' + version}/>
           <Drawer.Content>
             {list.map(({ selected, href, action, icon, text }) => (
               <Drawer.Item

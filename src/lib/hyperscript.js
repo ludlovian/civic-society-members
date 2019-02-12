@@ -1,6 +1,6 @@
 'use strict'
 
-import { defineElement, defineView } from 'domvm/dist/dev/domvm.dev'
+import { defineElement, defineView } from 'domvm/dist/nano/domvm.nano'
 
 export default function h (...args) {
   // process args
