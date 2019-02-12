@@ -1,12 +1,11 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../lib/hyperscript'
 
 import Card from '../components/Material/Card'
 import Button from '../components/Material/Button'
 
-import store from '../store'
-import { classnames } from '../lib/classify'
+import { views, actions } from '../store'
 import stylish from '../lib/stylish'
 import {
   FormState,
@@ -16,11 +15,7 @@ import {
   parsers
 } from '../lib/formstate'
 import Field from '../components/Field'
-import pdsp from '../lib/pdsp'
-import { getRoute, setRoute } from '../lib/routeutil'
 import schema from '../schema'
-
-const { required } = validators
 
 export default function MemberDetails () {
   const style = `
@@ -39,139 +34,154 @@ export default function MemberDetails () {
     .buttons { justify-content: flex-end; }
     .buttons>.mdc-button { margin-left: 12px; }
   `
+
+  let cleanup = []
   let form
-  let member
 
-  function onedit (e) {
-    pdsp(e)
-    const route = getRoute()
-    route.query.edit = ''
-    setRoute(route)
+  function onedit (member) {
+    actions.route.updateData({ edit: true })
+    return false
   }
 
-  function oncancel (e) {
-    pdsp(e)
+  function oncancel (member) {
     form.set(member)
-    const route = getRoute()
-    delete route.query.edit
-    setRoute(route)
+    actions.route.updateData({ edit: false })
+    return false
   }
 
-  async function onsave (e) {
-    pdsp(e)
-    await form.validate()
-    if (form.hasError) return
-    const patch = form.getChanges()
-    store.members.updateMember(member, patch)
-    const route = getRoute()
-    delete route.query.edit
-    setRoute(route)
+  function onsave (member) {
+    form.validate().then(isValid => {
+      if (!isValid) return
+      const patch = form.getChanges()
+      actions.members.updateMember(member, patch)
+      actions.route.updateData({ edit: false })
+    })
+    return false
   }
 
   return {
-    oninit ({ attrs }) {
-      member = attrs.member
+    init (vm, { member }) {
       form = getForm(member)
     },
+    hooks: {
+      didMount (vm, { member }) {
+        cleanup = [
+          views.route.state.on(() => vm.redraw()),
+          views.members.members.on(() => vm.redraw())
+        ]
+      },
+      willUnmount () {
+        cleanup.forEach(f => f())
+      }
+    },
 
-    view ({ attrs }) {
-      member = attrs.member
-      const route = getRoute()
-      const isEditing = 'edit' in route.query
-      if (!isEditing) form.set(member)
-
-      const cl = classnames(stylish(style))
-
+    render (vm, { member }) {
+      const { edit } = views.route.state().data
+      const cl = stylish(style)
       return (
-        <div className={cl}>
+        <div class={cl}>
           <form>
             <Field
-              className='field'
+              class='field'
               id='sortName'
               label='Sort name'
               fieldState={form.$.sortName}
-              disabled={!isEditing}
+              disabled={!edit}
             />
 
             <Field
-              className='field'
+              class='field'
+              id='address'
               label='Address'
               fieldState={form.$.address}
               type='textarea'
               rows='5'
-              disabled={!isEditing}
+              disabled={!edit}
             />
 
             <Field
-              className='field'
+              class='field'
+              id='tel'
               label='Telephone'
               fieldState={form.$.tel}
-              disabled={!isEditing}
+              disabled={!edit}
             />
 
             <Field
-              className='field'
+              class='field'
+              id='email'
               label='Email address'
               fieldState={form.$.email}
-              disabled={!isEditing}
+              disabled={!edit}
             />
 
             <Field.Select
-              className='field'
+              class='field'
+              id='mtype'
               label='Membership type'
               fieldState={form.$.type}
               values={schema.member.type}
-              disabled={!isEditing}
+              disabled={!edit}
             />
 
             <Field
-              className='field'
+              class='field'
+              id='notes'
               label='Notes'
               fieldState={form.$.notes}
               type='textarea'
               rows='3'
-              disabled={!isEditing}
+              disabled={!edit}
             />
 
             <Field.Select
-              className='field'
+              class='field'
+              id='postType'
               label='Postage'
               fieldState={form.$.postType}
               values={schema.member.postType}
-              disabled={!isEditing}
+              disabled={!edit}
             />
 
             <Field.Select
-              className='field'
+              class='field'
+              id='giftAid'
               label='Gift Aid'
               fieldState={form.$.giftAid}
               values={schema.member.giftAid}
-              disabled={!isEditing}
+              disabled={!edit}
             />
 
             <Field.Select
-              className='field'
+              class='field'
+              id='usualMethod'
               label='Pay by'
               fieldState={form.$.usualMethod}
               values={schema.member.usualMethod}
-              disabled={!isEditing}
+              disabled={!edit}
             />
           </form>
 
-          <Card.Actions className='buttons'>
-            {isEditing && (
-              <Button key='cancel' ripple xattrs={{ onclick: oncancel }}>
+          <Card.Actions class='buttons'>
+            {edit && (
+              <Button
+                key='cancel'
+                id='cancel'
+                ripple
+                onclick={[oncancel, member]}
+              >
                 Cancel
               </Button>
             )}
 
             <Button
               key='edit'
+              id='edit'
               ripple
-              raised={isEditing}
-              xattrs={{ onclick: isEditing ? onsave : onedit }}
+              raised={edit}
+              onclick={[edit ? onsave : onedit, member]}
             >
-              {isEditing ? 'Save' : 'Edit'}
+              {edit ? 'Save' : 'Edit'}
             </Button>
           </Card.Actions>
         </div>
@@ -182,24 +192,38 @@ export default function MemberDetails () {
 
 function getForm (mbr) {
   return new FormState({
-    sortName: new FieldState(mbr.sortName).validators(required),
-
-    address: new FieldState(mbr.address).validators(required),
-
-    tel: new FieldState(mbr.tel),
-
-    email: new FieldState(mbr.email),
-
-    type: new FieldState(mbr.type).validators(required),
-
-    notes: new FieldState(mbr.notes),
-
-    giftAid: new FieldState(mbr.giftAid)
-      .parser(parsers.boolean)
-      .formatter(formatters.boolean),
-
-    postType: new FieldState(mbr.postType).validators(required),
-
-    usualMethod: new FieldState(mbr.usualMethod)
+    sortName: new FieldState({
+      value: mbr.sortName,
+      validator: validators.required
+    }),
+    address: new FieldState({
+      value: mbr.address,
+      validator: validators.required
+    }),
+    tel: new FieldState({
+      value: mbr.tel
+    }),
+    email: new FieldState({
+      value: mbr.email
+    }),
+    type: new FieldState({
+      value: mbr.type,
+      validator: validators.required
+    }),
+    notes: new FieldState({
+      value: mbr.notes
+    }),
+    giftAid: new FieldState({
+      value: mbr.giftAid,
+      parser: parsers.boolean,
+      formatter: formatters.boolean
+    }),
+    postType: new FieldState({
+      value: mbr.postType,
+      validator: validators.required
+    }),
+    usualMethod: new FieldState({
+      value: mbr.usualMethod
+    })
   })
 }

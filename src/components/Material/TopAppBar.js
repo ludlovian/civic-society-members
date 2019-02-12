@@ -1,55 +1,51 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../../lib/hyperscript'
 
 import { MDCTopAppBar } from '@material/top-app-bar/index'
 
-import { classnames } from '../../lib/classify'
+import classnames from 'classnames'
+import memoize from '../../lib/memoize'
 
-export default function TopAppBar () {
-  let control
-  let _onNav
+const getHooks = memoize(onNav => ({
+  didInsert (node) {
+    node.data = node.data || {}
+    node.data.mdcTopAppBar = new MDCTopAppBar(node.el)
+    if (onNav) node.data.mdcTopAppBar.listen('MDCTopAppBar:nav', onNav)
+  },
 
-  function onNav (e) {
-    if (_onNav) _onNav(e)
+  willRecycle (prev, node) {
+    node.data = prev.data
+  },
+
+  willRemove (node) {
+    if (onNav) node.data.mdcTopAppBar.unlisten('MDCTopAppBar:nav', onNav)
+    node.data.mdcTopAppBar.destroy()
   }
+}))
 
-  return {
-    oncreate ({ dom }) {
-      control = new MDCTopAppBar(dom)
-      control.listen('MDCTopAppBar:nav', onNav)
-    },
-
-    onremove () {
-      control.unlisten('MDCTopAppBar:nav', onNav)
-      control.destroy()
-    },
-
-    view ({ children, attrs }) {
-      const { className, fixed, onNav, xattrs = {}, ...rest } = attrs
-      _onNav = onNav
-      const cl = classnames(
-        className,
-        'mdc-top-app-bar',
-        fixed && 'mdc-top-app-bar--fixed'
-      )
-
-      return (
-        <header className={cl} {...xattrs} {...rest}>
-          {children}
-        </header>
-      )
+const TopAppBar = {
+  template ({ children, class: cl, fixed, onNav, ...rest }) {
+    cl = classnames(cl, 'mdc-top-app-bar', fixed && 'mdc-top-app-bar--fixed')
+    const attrs = {
+      ...rest,
+      _key: rest._key || rest.id || 'mdcTopAppBar',
+      _hooks: getHooks(onNav)
     }
+    return (
+      <header class={cl} {...attrs}>
+        {children}
+      </header>
+    )
   }
 }
 
 TopAppBar.Row = {
-  view ({ children, attrs }) {
-    const { className, xattrs = {}, ...rest } = attrs
-    const cl = classnames(className, 'mdc-top-app-bar__row')
+  template ({ children, class: cl, ...rest }) {
+    cl = classnames(cl, 'mdc-top-app-bar__row')
 
     return (
-      <div className={cl} {...xattrs} {...rest}>
+      <div class={cl} {...rest}>
         {children}
       </div>
     )
@@ -57,17 +53,16 @@ TopAppBar.Row = {
 }
 
 TopAppBar.Section = {
-  view ({ children, attrs }) {
-    const { className, alignStart, alignEnd, xattrs = {}, ...rest } = attrs
-    const cl = classnames(
-      className,
+  template ({ children, class: cl, alignStart, alignEnd, ...rest }) {
+    cl = classnames(
+      cl,
       'mdc-top-app-bar__section',
       alignStart && 'mdc-top-app-bar__section--align-start',
       alignEnd && 'mdc-top-app-bar__section--align-end'
     )
 
     return (
-      <section className={cl} {...xattrs} {...rest}>
+      <section class={cl} {...rest}>
         {children}
       </section>
     )
@@ -75,18 +70,19 @@ TopAppBar.Section = {
 }
 
 TopAppBar.Icon = {
-  view ({ children, attrs }) {
-    const { className, navigation, xattrs = {}, ...rest } = attrs
-    const cl = classnames(
-      className,
+  template ({ children, class: cl, navigation, ...rest }) {
+    cl = classnames(
+      cl,
       'material-icons',
       navigation && 'mdc-top-app-bar__navigation-icon'
     )
 
     return (
-      <a className={cl} {...xattrs} {...rest}>
+      <a class={cl} {...rest}>
         {children}
       </a>
     )
   }
 }
+
+export default TopAppBar

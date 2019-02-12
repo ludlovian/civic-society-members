@@ -5,7 +5,7 @@ import { loadFromLocal, saveToLocal } from '../lib/local'
 import config from '../config'
 
 export default {
-  data: {
+  initial: {
     username: '',
     token: '',
     loginTimestamp: undefined,
@@ -13,56 +13,71 @@ export default {
     spreadsheetId: undefined
   },
 
-  actions: self => ({
-    storeCreds: (_, { username, token }) => ({
-      username,
-      token,
-      loginTimestamp: Date.now()
-    }),
-
-    storeConfig: (_, { spreadsheet: spreadsheetId }) => ({ spreadsheetId }),
-
-    signIn (state, creds) {
-      const { username } = creds
-      return self.root.engine.execute(async () => {
-        const { token } = await backend.authUser(creds)
-        self.storeCreds({ username, token })
-        const { spreadsheet } = await backend.fetchConfig()
-        self.storeConfig({ spreadsheet })
-        self.root.members.fetchAll()
+  actions: ({ state, update, actions }) => {
+    function storeCreds ({ username, token }) {
+      update({
+        username,
+        token,
+        loginTimestamp: Date.now()
       })
-    },
+    }
 
-    signOut () {
-      self.root.members.clear()
-      return {
+    function storeConfig ({ spreadsheet: spreadsheetId }) {
+      update({ spreadsheetId })
+    }
+
+    function signIn (creds) {
+      const { username } = creds
+      return actions.engine.execute(async () => {
+        const { token } = await backend.authUser(creds)
+        storeCreds({ username, token })
+        const { spreadsheet } = await backend.fetchConfig()
+        storeConfig({ spreadsheet })
+        actions.members.fetchAll()
+      })
+    }
+
+    function signOut () {
+      actions.members.clear()
+      update({
         username: '',
         token: '',
         loginTimestamp: undefined,
         signedOut: true
-      }
-    },
-
-    onInit () {
-      const data = loadFromLocal({ key: 'auth' })
-      return { ...data, signedOut: false }
+      })
     }
-  }),
 
-  views: self => ({
-    isSignedIn: ({ token }) => !!token,
-    isSignedOut: ({ signedOut }) => signedOut,
-    getToken: ({ token }) => token,
-    getUser: ({ username }) => username,
+    function init () {
+      const data = loadFromLocal({ key: 'auth' })
+      update({ ...data, signedOut: false })
+    }
 
-    getConfig ({ spreadsheetId }) {
+    function start () {
+      state.on(snap => {
+        saveToLocal({ key: 'auth' }, snap)
+      })
+    }
+
+    return {
+      init,
+      start,
+      signIn,
+      signOut
+    }
+  },
+
+  views: ({ state }) => ({
+    signedIn: state.map(({ token }) => !!token),
+    signedOut: state.map(({ signedOut }) => signedOut),
+    token: state.map(({ token }) => token),
+    user: state.map(({ username }) => username),
+    config: state.map(({ spreadsheetId }) => {
+      if (!spreadsheetId) return
       const sheetId = spreadsheetId[config.isTest ? 'test' : 'live']
       return {
         spreadsheetId: sheetId,
         spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${sheetId}/`
       }
-    }
-  }),
-
-  onChange: snap => saveToLocal({ key: 'auth' }, snap)
+    })
+  })
 }

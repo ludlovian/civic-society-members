@@ -1,11 +1,11 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../lib/hyperscript'
 
 import Card from '../components/Material/Card'
 import Typography from '../components/Material/Typography'
 
-import classify from '../lib/classify'
+import classnames from 'classnames'
 import stylish from '../lib/stylish'
 
 const style = `
@@ -14,17 +14,18 @@ const style = `
   .header { padding-bottom: 16px; }
   .body { padding-bottom: 16px; }
 `
-export default {
-  view () {
-    return classify(
-      stylish(style),
-      <div className='scrim'>
-        <Card className='card'>
-          <div className='header'>
+
+const NotFound = {
+  render () {
+    const cl = classnames(stylish(style), 'scrim')
+    return (
+      <div class={cl}>
+        <Card class='card'>
+          <div class='header'>
             <Typography headline4>404! Page not found.</Typography>
           </div>
 
-          <div className='body'>
+          <div class='body'>
             <Typography body1>
               Looks like the page you are trying to access does not exist
             </Typography>
@@ -34,3 +35,5 @@ export default {
     )
   }
 }
+
+export default NotFound

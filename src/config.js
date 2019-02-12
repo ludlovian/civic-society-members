@@ -4,6 +4,9 @@ const config = {
   // are we in test
   isTest: process.env.NODE_ENV !== 'production',
 
+  // path at which the app is mounted
+  basePath: '/civic-society-members',
+
   // api endpoint
   backend: 'https://us-central1-ludlow-civic-225710.cloudfunctions.net/api',
 

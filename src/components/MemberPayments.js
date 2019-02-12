@@ -1,18 +1,15 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../lib/hyperscript'
 
 import Typography from './Material/Typography'
 import Card from '../components/Material/Card'
 import Button from '../components/Material/Button'
 
-import store from '../store'
+import { views, actions } from '../store'
 import dayjs from 'dayjs'
-import classify from '../lib/classify'
 import stylish from '../lib/stylish'
 import sortBy from '../lib/sortBy'
-import pdsp from '../lib/pdsp'
-import { getRoute, setRoute } from '../lib/routeutil'
 
 import Field from './Field'
 import {
@@ -40,103 +37,76 @@ export default function MemberPayments () {
     .buttons>.mdc-button { margin-left: 12px; }
   `
 
+  let cleanup = []
   let form
-  let member
-  let lastPayment
 
-  function onedit (e) {
-    pdsp(e)
-    form = getForm(lastPayment)
-    const route = getRoute()
-    route.query.add = ''
-    setRoute(route)
+  function onedit (member) {
+    actions.route.updateData({ edit: true })
+    return false
   }
 
-  function oncancel (e) {
-    pdsp(e)
-    const route = getRoute()
-    delete route.query.add
-    setRoute(route)
+  function oncancel () {
+    actions.route.updateData({ edit: false })
+    return false
   }
 
-  async function onsave (e) {
-    pdsp(e)
-    await form.validate()
-    if (form.hasError) return null
-    store.members.addPayment(member, form.getValues())
-    const route = getRoute()
-    delete route.query.add
-    setRoute(route)
+  function onsave (member) {
+    form.validate().then(isValid => {
+      if (!isValid) return
+      actions.members.addPayment(member, form.getValues())
+      actions.route.updateData({ edit: false })
+    })
+    return false
   }
 
   return {
-    view ({ attrs }) {
-      member = attrs.member
-      const route = getRoute()
-      const isAdding = 'add' in route.query
-      const payments = member.payments.slice().sort(sortBy(pmt => pmt.date))
+    init (vm, { member }) {
+      form = getForm(getPayments(member).pop())
+    },
+    hooks: {
+      didMount (vm, { member }) {
+        cleanup = [
+          views.route.state.on(() => vm.redraw()),
+          views.members.members.on(() => vm.redraw())
+        ]
+      },
+      willUnmount () {
+        cleanup.forEach(f => f())
+      }
+    },
 
-      // stash the last payment away each time, so we can use
-      // it as a template for the form
-      lastPayment = payments.slice().pop()
+    render (vm, { member }) {
+      const { edit } = views.route.state().data
+      const payments = getPayments(member)
+      const cl = stylish(style)
 
-      return classify(
-        stylish(style),
-        <div>
+      return (
+        <div class={cl}>
           <table>
-            <thead>
-              <tr>
-                {'Date|Amount|Paid by'.split('|').map(t => (
-                  <Typography headline6>{t}></Typography>
-                ))}
-              </tr>
-            </thead>
-
+            <Heading />
             <tbody>
-              {!payments.length && (
-                <tr>
-                  <td colspan='3'>
-                    <Typography body1>No payments recorded</Typography>
-                  </td>
-                </tr>
+              {payments.length ? (
+                <PaymentRows payments={payments} />
+              ) : (
+                <NoPayments />
               )}
-
-              {payments.map(pmt => (
-                <tr className='payment'>
-                  <td>
-                    <Typography body1>
-                      {dayjs(pmt.date).format('Do MMM YY')}
-                    </Typography>
-                  </td>
-
-                  <td>
-                    <Typography body1>
-                      {formatters.currency(pmt.amount)}
-                    </Typography>
-                  </td>
-
-                  <td>
-                    <Typography body1>{pmt.method}</Typography>
-                  </td>
-                </tr>
-              ))}
-
-              {isAdding && <NewPayment form={form} />}
+              {edit && <NewPayment form={form} />}
             </tbody>
           </table>
 
-          <Card.Actions className='buttons'>
-            {isAdding && (
-              <Button key='cancel' ripple xattrs={{ onclick: oncancel }}>
+          <Card.Actions class='buttons'>
+            {edit && (
+              <Button id='cancel' key='cancel' ripple onclick={[oncancel]}>
                 Cancel
               </Button>
             )}
 
             <Button
-              key='add'
+              id='edit'
+              key='edit'
               ripple
-              raised={isAdding}
-              xattrs={{ onclick: isAdding ? onsave : onedit }}
+              raised={edit}
+              onclick={[edit ? onsave : onedit, member]}
             >
               Add
             </Button>
@@ -147,42 +117,89 @@ export default function MemberPayments () {
   }
 }
 
-const NewPayment = {
-  view ({ attrs: { form } }) {
-    return (
-      <tr className='new-payment'>
+const Heading = {
+  template: () => (
+    <thead>
+      <tr>
+        {'Date|Amount|Paid by'.split('|').map(t => (
+          <th _key={t}>
+            <Typography headline6>{t}</Typography>
+          </th>
+        ))}
+      </tr>
+    </thead>
+  )
+}
+
+const NoPayments = {
+  template: () => (
+    <tr>
+      <td colspan='3'>
+        <Typography body1>No payments recorded</Typography>
+      </td>
+    </tr>
+  )
+}
+
+const PaymentRows = {
+  template: ({ payments }) =>
+    payments.map(pmt => (
+      <tr class='payment'>
         <td>
-          <Field label='Date' type='date' fieldState={form.$.date} />
+          <Typography body1>{dayjs(pmt.date).format('Do MMM YY')}</Typography>
         </td>
 
         <td>
-          <Field label='Amount' fieldState={form.$.amount} />
+          <Typography body1>{formatters.currency(pmt.amount)}</Typography>
         </td>
 
         <td>
-          <Field label='Paid by' fieldState={form.$.method} />
+          <Typography body1>{pmt.method}</Typography>
         </td>
       </tr>
-    )
-  }
+    ))
+}
+
+const NewPayment = {
+  template: ({ form }) => (
+    <tr class='new-payment'>
+      <td>
+        <Field label='Date' id='date' type='date' fieldState={form.$.date} />
+      </td>
+
+      <td>
+        <Field label='Amount' id='amount' fieldState={form.$.amount} />
+      </td>
+
+      <td>
+        <Field label='Paid by' id='method' fieldState={form.$.method} />
+      </td>
+    </tr>
+  )
 }
 
 function getForm (pmt) {
   return new FormState({
-    date: new FieldState(
-      dayjs()
+    date: new FieldState({
+      value: dayjs()
         .startOf('day')
-        .toDate()
-    )
-      .validators(validators.required)
-      .parser(parsers.date)
-      .formatter(formatters.date),
-
-    amount: new FieldState(pmt ? pmt.amount : '')
-      .validators(validators.required, validators.currency)
-      .parser(parsers.currency)
-      .formatter(formatters.currency),
-
-    method: new FieldState(pmt ? pmt.method : '')
+        .toDate(),
+      validator: validators.required,
+      parser: parsers.date,
+      formatter: formatters.date
+    }),
+    amount: new FieldState({
+      value: pmt ? pmt.amount : '',
+      validator: [validators.required, validators.currency],
+      parser: parsers.currency,
+      formatter: formatters.currency
+    }),
+    method: new FieldState({
+      value: pmt ? pmt.method : ''
+    })
   })
+}
+
+function getPayments (member) {
+  return member.payments.slice().sort(sortBy(pmt => pmt.date))
 }

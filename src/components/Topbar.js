@@ -1,16 +1,15 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../lib/hyperscript'
 
 import TopAppBar from './Material/TopAppBar'
 import Typography from './Material/Typography'
 import Icon from './Material/Icon'
 
 import MemberSearch from './MemberSearch'
-import store from '../store'
-import windowSize from '../lib/windowsize'
+import MediaQuery from './MediaQuery'
+import { views, actions } from '../store'
 import stylish from '../lib/stylish'
-import classify from '../lib/classify'
 import config from '../config'
 
 const style = `
@@ -29,56 +28,92 @@ const style = `
   }
 `
 
-export default {
-  view ({ attrs: { onNav, includeSearch } }) {
-    return classify(
-      stylish(style),
-      <TopAppBar fixed onNav={onNav}>
+export default function Topbar () {
+  let cleanup
+
+  let hasSearch = views.route.state.map(s => s.page === 'home')
+
+  function willMount (vm) {
+    cleanup = hasSearch.on(() => vm.redraw())
+  }
+
+  function willUnmount (vm) {
+    cleanup()
+  }
+
+  function render (vm, { onNav }) {
+    const cl = stylish(style)
+    return (
+      <TopAppBar class={cl} fixed onNav={onNav}>
         <TopAppBar.Row>
           <TopAppBar.Section alignStart>
             <TopAppBar.Icon navigation>menu</TopAppBar.Icon>
-
-            <Typography
-              className='title'
-              headline5
-              xattrs={{ onclick: store.members.fetchAll }}
-            >
-              {windowSize.isSmall ? 'LCS' : 'Ludlow Civic Society'}
-            </Typography>
-
-            {config.isTest && (
-              <Typography className='test' body1>
-                (test)
-              </Typography>
-            )}
-
-            <EngineStatus className='engine-status' />
+            <AppTitle />
+            <IsTest />
+            <EngineStatus />
           </TopAppBar.Section>
-
-          {includeSearch && <MemberSearch />}
+          {hasSearch() && <MemberSearch />}
         </TopAppBar.Row>
       </TopAppBar>
     )
   }
+
+  return { render, hooks: { willMount, willUnmount } }
+}
+
+const AppTitle = {
+  template: () => (
+    <Typography class='title' headline5 onclick={actions.members.fetchAll}>
+      <MediaQuery match='(max-width:640px)'>
+        {matches => <span>{matches ? 'LCS' : 'Ludlow Civic Society'}</span>}
+      </MediaQuery>
+    </Typography>
+  )
+}
+
+const IsTest = {
+  template: () =>
+    config.isTest && (
+      <Typography class='test' body1>
+        (test)
+      </Typography>
+    )
+}
+
+function toError () {
+  actions.route.toPage('error')
 }
 
 function EngineStatus () {
+  let cleanup = []
+
   const states = {
     idle: [],
     busy: ['sync'],
     disconnected: ['cloud_off'],
-    error: ['error', '/error']
+    error: ['error', toError]
   }
 
   return {
-    view ({ attrs }) {
-      const status = store.engine.getStatus()
-      let [icon, target] = states[status]
-      if (!icon) return false
-      icon = <Icon {...attrs}>{icon}</Icon>
+    hooks: {
+      didMount (vm) {
+        cleanup = [views.engine.status.on(() => vm.redraw())]
+      },
+      willUnmount () {
+        cleanup.forEach(f => f())
+      }
+    },
+    render () {
+      let [icon, target] = states[views.engine.status()]
+      if (!icon) return <span />
+      icon = <Icon class='engine-status'>{icon}</Icon>
       if (!target) return icon
+      const onclick = e => {
+        target()
+        return false
+      }
       return (
-        <a href={target} oncreate={m.route.link}>
+        <a href={target} onclick={[onclick]}>
           {icon}
         </a>
       )

@@ -1,160 +1,133 @@
 'use strict'
 
-import valoo from './valoo'
-import dedupe from './dedupe'
+import { P } from 'patchinko'
+import stream from './stream'
 
 import dayjs from 'dayjs'
 
+//
+// Field state.
+//
+// Has two inputs sreams of data
+//
+// - value (from backend)
+// - text (from user)
+//
+// goes through
+// - validation (of input)
+// - parsing (of input)
+// - formatting (of value)
+//
+// and produces output stream of
+// - value (to backend)
+// - text (to user)
+// - error (to user)
+//
 export class FieldState {
-  constructor (value) {
-    // internal state
-    this._state = valoo({})
-    this._validators = []
-    // .value -> .$
-    this._parser = undefined
-    // .$ -> value
-    this._formatter = undefined
-    this.notify = fn => this._state.on(dedupe(fn, dedupe.shallow))
-    this.onChange = this.onChange.bind(this)
-    // set the value
-    this.$ = value
+  constructor (opts) {
+    this.validator = ensureArray(opts.validator || [])
+    this.parser = opts.parser
+    this.formatter = opts.formatter
+    // the two input streams
+    this.value = stream()
+    this.text = stream()
+
+    this.value.on(v => this._updateValue(v))
+    this.text.on(t => this._updateText(t))
+    this.patch = stream()
+    this.state = this.patch.scan((s, p) => P({}, s, p), {})
+    this.value(opts.value)
   }
 
-  get $ () {
-    return this._state().$
-  }
-  get value () {
-    return this._state().value
-  }
-  get error () {
-    return this._state().error || ''
-  }
-  get dirty () {
-    return this._state().dirty || false
-  }
-  get validated () {
-    return this._state().validated || false
-  }
-  get hasError () {
-    return Boolean(this.error)
+  _updateValue (value) {
+    // new value supplied, so format text accordingly
+    const text = this.formatter ? this.formatter(value) : String(value)
+    this.patch({ error: '', value, text, dirty: false })
   }
 
-  _apply (update) {
-    this._state({ ...this._state(), ...update })
-  }
-  set $ (v) {
-    this._apply({
-      $: v,
-      value: format(v, this._formatter),
-      dirty: false
-    })
-  }
-
-  //
-  // sets the validators for this field
-  //
-  validators (...fns) {
-    this._validators = fns
-    return this
-  }
-  parser (fn) {
-    this._parser = fn
-    return this
-  }
-  formatter (fn) {
-    this._formatter = fn
-    this.$ = this.$ // reformat
-    return this
-  }
-
-  //
-  // call to explicitly validate
-  //
-  async validate () {
-    const update = { error: '', validated: true }
-    const value = this.value
-    this._validators.find(fn => {
-      update.error = fn(value) || ''
-      return update.error
-    })
-    if (!update.error) {
-      update.$ = parse(value, this._parser)
-      update.value = format(update.$, this._formatter)
-    }
-    this._apply(update)
-  }
-
-  //
-  // should be called when the field value changes
-  //
-  onChange (value) {
-    if (this.validated && value === this.value) return
-    this._apply({ dirty: true, value })
+  _updateText (text) {
+    // new text value supplied, so add it, and queue validation
+    this.patch({ text, dirty: true })
     this.validate()
+  }
+
+  // can be called by user - async validate and updates status
+  // message
+  //
+  // returns true if valid
+  validate () {
+    return Promise.resolve().then(() => {
+      let text = this.state().text || ''
+      let error = ''
+      this.validator.find(f => {
+        error = f(text)
+        return !!error
+      })
+      if (!error) {
+        const value = this.parser ? this.parser(text) : text
+        text = this.formatter ? this.formatter(value) : String(value)
+        this.patch({ error, value, text })
+        return false
+      } else {
+        this.patch({ error, text })
+        return true
+      }
+    })
   }
 }
 
 export class FormState {
   constructor (fields) {
     this.$ = fields
-    // our own state, which is updated from the child states
-    this._state = valoo(this._getState())
-    this.notify = fn => this._state.on(dedupe(fn, dedupe.shallow))
+    this.state = stream
+      .combine(
+        this._updateState.bind(this),
+        Object.values(fields).map(f => f.state)
+      )
+      .dedupeWith(stream.shallow)
+  }
 
-    const updateState = () => this._state(this._getState())
-    this._fields.forEach(f => f.notify(updateState))
-  }
-  _getState () {
-    const { dirty, error, validated } = this
-    return { dirty, error, validated }
-  }
-  get _fields () {
-    return Object.values(this.$)
-  }
-  get dirty () {
-    return this._fields.some(f => f.dirty)
-  }
-  get validated () {
-    return this._fields.every(f => f.validated)
-  }
-  get error () {
-    return this._fields.map(f => f.error).find(Boolean)
-  }
-  get hasError () {
-    return !!this.error
+  _updateState () {
+    return Object.values(this.$).reduce(
+      ({ error, dirty }, fld) => ({
+        error: error || fld.state().error,
+        dirty: dirty || fld.state().dirty
+      }),
+      { error: '', dirty: false }
+    )
   }
 
   validate () {
-    return Promise.all(this._fields.map(f => f.validate()))
+    // force validation of current text value for all
+    // fields by re-pushing the text value into the
+    // stream
+    return Promise.all(Object.values(this.$).map(fld => fld.validate())).then(
+      () => !this.state().error
+    )
   }
 
-  set (values) {
-    Object.entries(this.$).forEach(([k, f]) => {
-      f.$ = values[k]
-    })
-  }
-
-  getValues () {
-    return Object.entries(this.$).reduce((o, [k, f]) => {
-      o[k] = f.$
-      return o
-    }, {})
+  set (data) {
+    Object.entries(this.$).forEach(([k, fld]) => fld.value(data[k]))
   }
 
   getChanges () {
-    return Object.entries(this.$).reduce((o, [k, f]) => {
-      if (f.dirty) o[k] = f.$
+    return Object.entries(this.$).reduce((o, [k, fld]) => {
+      const { dirty, value } = fld.state()
+      if (dirty) o[k] = value
+      return o
+    }, {})
+  }
+
+  getValues () {
+    return Object.entries(this.$).reduce((o, [k, fld]) => {
+      o[k] = fld.state().value
       return o
     }, {})
   }
 }
 
-function parse (textValue, parser) {
-  return typeof parser === 'function' ? parser(textValue) : textValue
-}
-
-function format (value, formatter) {
-  return typeof formatter === 'function' ? formatter(value) : String(value)
+function ensureArray (o) {
+  return Array.isArray(o) ? o : [o]
 }
 
 export const validators = {

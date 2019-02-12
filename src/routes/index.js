@@ -1,78 +1,71 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../lib/hyperscript'
 
-import store from '../store'
-
-import Layout from '../components/Layout'
-import NotFound from './NotFound'
-import AppError from './Error'
 import Logout from './Logout'
 import Login from './Login'
+import AppError from './Error'
+import NotFound from './NotFound'
 import MemberList from './MemberList'
 import Member from './Member'
 import Spreadsheet from './Spreadsheet'
+import NewMember from './NewMember'
+import { views, actions } from '../store'
 
-const { isSignedIn } = store.auth
+const PERMITTED_UNAUTH = ['login', 'logout', 'error', '404']
+const DISALLOWED_AUTH = ['login']
 
-export default {
-  '/': authRoute(MemberList, true),
-  '/member/:key': authRoute(Member),
-  '/spreadsheet': authRoute(Spreadsheet),
-  '/login': unauthRoute(Login),
-  '/logout': route(Logout),
-  '/error': route(AppError),
-  '/:url': route(NotFound)
-}
-
-function authRoute (Comp, includeSearch = false) {
-  return {
-    render (vnode) {
-      if (isSignedIn()) {
-        return (
-          <Layout includeSearch={includeSearch}>
-            <Comp {...vnode.attrs} />
-          </Layout>
-        )
-      }
-      m.route.set('/login')
-      return (
-        <Layout>
-          <Login />
-        </Layout>
-      )
-    }
+export default function Router () {
+  function didMount (vm) {
+    vm.state = { monitor: views.route.state.map(() => vm.redraw()) }
   }
-}
-
-function route (Comp) {
-  return {
-    render (vnode) {
-      return (
-        <Layout>
-          <Comp {...vnode.attrs} />
-        </Layout>
-      )
-    }
+  function willUnmount (vm) {
+    vm.state.monitor.end(true)
   }
+
+  function render (vm) {
+    const { page, data } = views.route.state()
+    const isSignedIn = views.auth.signedIn()
+
+    if (!isSignedIn && PERMITTED_UNAUTH.indexOf(page) === -1) {
+      actions.route.toPage('login', {}, true)
+      vm.redraw()
+      return <div />
+    }
+
+    if (isSignedIn && DISALLOWED_AUTH.indexOf(page) !== -1) {
+      actions.route.toPage('home', {}, true)
+      vm.redraw()
+      return <div />
+    }
+
+    const PageView = getView(page)
+    return (
+      <div class='mdc-top-app-bar--fixed-adjust mdc-theme--background'>
+        <PageView {...data} />
+      </div>
+    )
+  }
+  return { render, hooks: { didMount, willUnmount } }
 }
 
-function unauthRoute (Comp) {
-  return {
-    render (vnode) {
-      if (!isSignedIn()) {
-        return (
-          <Layout>
-            <Comp {...vnode.attrs} />
-          </Layout>
-        )
-      }
-      m.route.set('/')
-      return (
-        <Layout includeSearch>
-          <MemberList />
-        </Layout>
-      )
-    }
+function getView (page) {
+  switch (page) {
+    case 'home':
+      return MemberList
+    case 'member':
+      return Member
+    case 'newmember':
+      return NewMember
+    case 'spreadsheet':
+      return Spreadsheet
+    case 'login':
+      return Login
+    case 'logout':
+      return Logout
+    case 'error':
+      return AppError
+    default:
+      return NotFound
   }
 }

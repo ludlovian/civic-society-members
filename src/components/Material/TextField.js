@@ -1,95 +1,93 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../../lib/hyperscript'
 
 import { MDCTextField } from '@material/textfield'
 
 import NotchedOutline from './NotchedOutline'
-import { getId } from './util'
-import { classnames } from '../../lib/classify'
+import classnames from 'classnames'
 
-export default function TextField () {
-  let id
-  let control
+const getHooks = () => ({
+  willRecycle (prev, node) {
+    node.data = prev.data
+  },
+  didInsert (node) {
+    node.data = node.data || {}
+    node.data.mdcTextField = new MDCTextField(node.el)
+  },
 
-  return {
-    oninit ({ attrs }) {
-      id = getId(id || attrs.id)
-    },
+  willRemove (node) {
+    node.data.mdcTextField.destroy()
+  }
+})
 
-    oncreate ({ dom, attrs }) {
-      control = new MDCTextField(dom.firstElementChild)
-    },
+const TextField = {
+  template ({
+    class: cl,
+    id,
+    type,
+    label,
+    disabled,
+    value,
+    helperText,
+    persistent,
+    validationMsg,
+    ...rest
+  }) {
+    const clControl = classnames('mdc-text-field', {
+      'mdc-text-field--outlined': label,
+      'mdc-text-field--textarea': type === 'textarea',
+      'mdc-text-field--disabled': disabled
+    })
 
-    onremove () {
-      control.destroy()
-    },
+    const Elem = type === 'textarea' ? 'textarea' : 'input'
 
-    view ({ attrs }) {
-      const {
-        className,
-        label,
-        disabled,
-        type,
-        value,
-        helperText,
-        persistent,
-        validationMsg,
-        xattrs = {},
-        ...rest
-      } = attrs
+    const clLabel = classnames('mdc-floating-label', {
+      'mdc-floating-label--float-above': value
+    })
 
-      const cl = classnames('mdc-text-field', {
-        'mdc-text-field--outlined': label,
-        'mdc-text-field--textarea': type === 'textarea',
-        'mdc-text-field--disabled': disabled
-      })
+    const clHelperText = classnames('mdc-text-field-helper-text', {
+      'mdc-text-field-helper-text--persistent': persistent,
+      'mdc-text-field-helper-text--validation-msg': validationMsg
+    })
 
-      const Elem = type === 'textarea' ? 'textarea' : 'input'
+    const attrs = {
+      _hooks: getHooks(),
+      _key: id + '-mdc-text-field'
+    }
+    const _type = {}
+    if (type !== 'textarea') _type.type = type
 
-      const clLabel = classnames('mdc-floating-label', {
-        'mdc-floating-label--float-above': value
-      })
+    return (
+      <div class={cl}>
+        <div class={clControl} {...attrs}>
+          <Elem
+            class='mdc-text-field__input'
+            {...rest}
+            value={value}
+            id={id}
+            {..._type}
+            disabled={disabled}
+            aria-controls={helperText !== undefined && `${id}-helper-text`}
+          />
 
-      const clHelperText = classnames('mdc-text-field-helper-text', {
-        'mdc-text-field-helper-text--persistent': persistent,
-        'mdc-text-field-helper-text--validation-msg': validationMsg
-      })
-
-      return (
-        <div className={className}>
-          <div className={cl}>
-            <Elem
-              className='mdc-text-field__input'
-              {...xattrs}
-              {...rest}
-              value={value}
-              id={id}
-              type={type !== 'textarea' && type}
-              disabled={disabled}
-              aria-controls={helperText !== undefined && `${id}-helper-text`}
-            />
-
-            {label && (
-              <NotchedOutline>
-                <label className={clLabel} for={id}>
-                  {label}
-                </label>
-              </NotchedOutline>
-            )}
-          </div>
-
-          {helperText !== undefined && (
-            <p
-              className={clHelperText}
-              aria-hidden='true'
-              id={`${id}-helper-text`}
-            >
-              {helperText}
-            </p>
+          {label && (
+            <NotchedOutline>
+              <label class={clLabel} for={id}>
+                {label}
+              </label>
+            </NotchedOutline>
           )}
         </div>
-      )
-    }
+
+        {helperText !== undefined && (
+          <p class={clHelperText} aria-hidden='true' id={`${id}-helper-text`}>
+            {helperText}
+          </p>
+        )}
+      </div>
+    )
   }
 }
+
+export default TextField

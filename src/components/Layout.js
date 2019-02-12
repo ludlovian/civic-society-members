@@ -26,7 +26,7 @@ export default function Layout () {
         <div id='app'>
           <Sidebar open={isDrawerOpen} onClose={closeDrawer} />
           <Topbar onNav={openDrawer} includeSearch={includeSearch} />
-          <div className='mdc-top-app-bar--fixed-adjust mdc-theme--background'>
+          <div class='mdc-top-app-bar--fixed-adjust mdc-theme--background'>
             {children}
           </div>
         </div>

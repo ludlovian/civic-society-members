@@ -1,88 +1,85 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../../lib/hyperscript'
 
 import { MDCTabBar } from '@material/tab-bar'
+import classnames from 'classnames'
+import memoize from '../../lib/memoize'
 
-import { classnames } from '../../lib/classify'
+const getHooks = memoize(onchange => ({
+  didInsert (node) {
+    const data = (node.data = node.data || {})
+    const mdcTabBar = (data.mdcTabBar = new MDCTabBar(node.el))
+    if (onchange) mdcTabBar.listen('MDCTabBar:activated', onchange)
+  },
 
-export default function TabBar () {
-  let control
+  willRecycle (prev, node) {
+    node.data = prev.data
+  },
 
-  return {
-    oncreate ({ dom, attrs }) {
-      const { xattrs = {} } = attrs
-      control = new MDCTabBar(dom)
-      if (xattrs.onchange) {
-        control.listen('MDCTabBar:activated', xattrs.onchange)
-      }
-    },
+  willRemove (node) {
+    const { data } = node
+    const { mdcTabBar } = data
+    if (onchange) mdcTabBar.unlisten('MDCTabBar:activated', onchange)
+    mdcTabBar.destroy()
+  }
+}))
 
-    onremove ({ attrs }) {
-      const { xattrs = {} } = attrs
-      if (xattrs.onchange) {
-        control.unlisten('MDCTabBar:activated', xattrs.onchange)
-      }
-      control.destroy()
-    },
+const TabBar = {
+  template ({ children, class: cl, onchange, id, ...rest }) {
+    cl = classnames(cl, 'mdc-tab-bar')
 
-    view ({ children, attrs }) {
-      const { className, xattrs, ...rest } = attrs
-      const cl = classnames(className, 'mdc-tab-bar')
-
-      return (
-        <div className={cl} {...xattrs} {...rest} role='tablist'>
-          <div className='mdc-tab-scroller'>
-            <div className='mdc-tab-scroller__scroll-area'>
-              <div className='mdc-tab-scroller__scroll-content'>{children}</div>
-            </div>
+    const attrs = {
+      _hooks: getHooks(onchange),
+      _key: id + '-mdc-tab-bar'
+    }
+    return (
+      <div class={cl} {...rest} {...attrs} role='tablist'>
+        <div class='mdc-tab-scroller'>
+          <div class='mdc-tab-scroller__scroll-area'>
+            <div class='mdc-tab-scroller__scroll-content'>{children}</div>
           </div>
         </div>
-      )
-    }
+      </div>
+    )
   }
 }
 
 TabBar.Tab = {
-  view ({ children, attrs }) {
-    const { className, active, xattrs = {}, ...rest } = attrs
-    const cl = classnames(className, 'mdc-tab', {
-      'mdc-tab--active': active
-    })
+  template ({ children, class: cl, active, ...rest }) {
+    cl = classnames(cl, 'mdc-tab', active && 'mdc-tab--active')
 
     return (
       <button
-        className={cl}
-        {...xattrs}
+        class={cl}
         {...rest}
         role='tab'
         aria-selected={active}
         tabindex={active ? '0' : '-1'}
       >
-        <span className='mdc-tab__content'>{children}</span>
+        <span class='mdc-tab__content'>{children}</span>
 
         <span
-          className={classnames(
+          class={classnames(
             'mdc-tab-indicator',
             active && 'mdc-tab-indicator--active'
           )}
         >
-          <span className='mdc-tab-indicator__content mdc-tab-indicator__content--underline' />
+          <span class='mdc-tab-indicator__content mdc-tab-indicator__content--underline' />
         </span>
 
-        <span className='mdc-tab__ripple' />
+        <span class='mdc-tab__ripple' />
       </button>
     )
   }
 }
 
 TabBar.TabIcon = {
-  view ({ children, attrs }) {
-    const { className, xattrs = {}, ...rest } = attrs
-    const cl = classnames(className, 'material-icons', 'mdc-tab__icon')
+  template ({ children, class: cl, ...rest }) {
+    cl = classnames(cl, 'material-icons', 'mdc-tab__icon')
 
     return (
-      <span className={cl} {...xattrs} {...rest}>
+      <span class={cl} {...rest}>
         {children}
       </span>
     )
@@ -90,57 +87,48 @@ TabBar.TabIcon = {
 }
 
 TabBar.TabText = {
-  view ({ children, attrs }) {
-    const { className, xattrs = {}, ...rest } = attrs
-    const cl = classnames(className, 'mdc-tab__text-label')
+  template ({ children, class: cl, ...rest }) {
+    cl = classnames(cl, 'mdc-tab__text-label')
 
     return (
-      <span className={cl} {...xattrs} {...rest}>
+      <span class={cl} {...rest}>
         {children}
       </span>
     )
   }
 }
 
-TabBar.AutoTab = function AutoTab () {
-  let tabs
-  let _onchange
-  let _ontabchange
+TabBar.AutoTab = {
+  render (vm, { children, ontabchange, onchange, tab, ...rest }) {
+    const tabs = children
+      .map(child => child.data && child.data.tab)
+      .filter(Boolean)
+    const activeTab = tabs.find(t => t === tab) || tabs[0]
+    const activeChild = children.find(
+      child => child.data && child.data.tab === activeTab
+    )
+    if (!activeChild) return false
 
-  function onchange (e) {
-    const tab = tabs[e.detail.index]
-    if (_onchange) _onchange(e)
-    if (_ontabchange) _ontabchange(tab)
-    m.redraw()
-  }
-
-  return {
-    view ({ children, attrs }) {
-      const { ontabchange, tab, xattrs = {}, ...rest } = attrs
-      _onchange = xattrs.onchange
-      _ontabchange = ontabchange
-
-      tabs = children
-        .map(child => child.attrs && child.attrs.tab)
-        .filter(Boolean)
-      const activeTab = tabs.find(t => t === tab) || tabs[0]
-      const activeChild = children.find(
-        child => child.attrs && child.attrs.tab === activeTab
-      )
-      if (!activeChild) return false
-
-      return (
-        <div {...rest}>
-          <TabBar xattrs={{ onchange }}>
-            {tabs.map(t => (
-              <TabBar.Tab active={t === activeTab}>
-                <TabBar.TabText>{t}</TabBar.TabText>
-              </TabBar.Tab>
-            ))}
-          </TabBar>
-          {activeChild}
-        </div>
-      )
+    function _onchange (e) {
+      const tab = tabs[e.detail.index]
+      if (onchange) onchange(e)
+      if (ontabchange) ontabchange(tab)
+      vm.update({ ...vm.data, tab })
     }
+
+    return (
+      <div {...rest}>
+        <TabBar onchange={_onchange}>
+          {tabs.map(t => (
+            <TabBar.Tab active={t === activeTab}>
+              <TabBar.TabText>{t}</TabBar.TabText>
+            </TabBar.Tab>
+          ))}
+        </TabBar>
+        {activeChild}
+      </div>
+    )
   }
 }
+
+export default TabBar

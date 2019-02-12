@@ -1,16 +1,15 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../lib/hyperscript'
 
 import Card from '../components/Material/Card'
 import Typography from '../components/Material/Typography'
 
-import store from '../store'
-import classify from '../lib/classify'
+import classnames from 'classnames'
+import { actions, views } from '../store'
 import stylish from '../lib/stylish'
-import pdsp from '../lib/pdsp'
 
-export default function AppError () {
+export default function AppError (vm) {
   const style = `
     :self.scrim { padding: 16px; height: 100% }
     .card { padding: 16px; maxWidth: 500px; margin: auto; }
@@ -19,20 +18,21 @@ export default function AppError () {
     .card .buttons { justify-content: flex-end; }
   `
 
-  function clearError (e) {
-    pdsp(e)
-    store.engine.clearError()
-  }
+  let cleanup = views.engine.state.on(x => vm.redraw())
 
   return {
-    view () {
-      const error = store.engine.getError()
+    willUnmount () {
+      cleanup()
+    },
 
-      return classify(
-        stylish(style),
-        <div className='scrim'>
-          <Card className='card'>
-            <div className='header'>
+    render () {
+      const error = views.engine.state().error
+      const cl = classnames(stylish(style), 'scrim')
+
+      return (
+        <div class={cl}>
+          <Card class='card'>
+            <div class='header'>
               <div>
                 <Typography headline5>Error</Typography>
               </div>
@@ -45,13 +45,13 @@ export default function AppError () {
               </div>
             </div>
 
-            <pre className='details'>
+            <pre class='details'>
               {error && (error.stack || error.message || String(error))}
             </pre>
 
             {error && (
-              <Card.Actions className='buttons'>
-                <Card.ActionButton ripple xattrs={{ onclick: clearError }}>
+              <Card.Actions class='buttons'>
+                <Card.ActionButton ripple onclick={actions.engine.clearError}>
                   Clear
                 </Card.ActionButton>
               </Card.Actions>

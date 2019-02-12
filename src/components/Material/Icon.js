@@ -1,18 +1,16 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../../lib/hyperscript'
+import classnames from 'classnames'
 
-import { classnames } from '../../lib/classify'
-
-export default {
-  view ({ children, attrs }) {
-    const { className, xattrs = {}, ...rest } = attrs
-    const cl = classnames(className, 'material-icons')
-
+const Icon = {
+  template ({ children, class: cl, ...rest }) {
+    cl = classnames(cl, 'material-icons')
     return (
-      <i className={cl} {...xattrs} {...rest}>
+      <i class={cl} {...rest}>
         {children}
       </i>
     )
   }
 }
+export default Icon

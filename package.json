@@ -22,32 +22,13 @@
     ],
     "settings": {
       "react": {
-        "pragma": "m"
+        "pragma": "h"
       }
     }
   },
   "eslintIgnore": [
     "build/*"
   ],
-  "babel": {
-    "presets": [
-      [
-        "@babel/preset-env",
-        {
-          "targets": "> 5%, not dead"
-        }
-      ]
-    ],
-    "plugins": [
-      [
-        "@babel/plugin-transform-react-jsx",
-        {
-          "pragma": "m",
-          "pragmaFrag": "m.fragment"
-        }
-      ]
-    ]
-  },
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@babel/plugin-transform-react-jsx": "^7.3.0",
@@ -81,9 +62,12 @@
     "@material/textfield": "^0.43.0",
     "@material/top-app-bar": "^0.43.0",
     "@material/typography": "^0.43.0",
+    "classnames": "^2.2.6",
     "dayjs": "^1.8.0",
+    "domvm": "^3.4.7",
     "lodash": "^4.17.11",
     "lz-string": "^1.4.4",
-    "mithril": "^2.0.0-rc"
+    "p-timeout": "^2.0.1",
+    "patchinko": "^4.1.0"
   }
 }

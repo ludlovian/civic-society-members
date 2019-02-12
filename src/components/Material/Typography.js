@@ -1,8 +1,8 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../../lib/hyperscript'
 
-import { classnames } from '../../lib/classify'
+import classnames from 'classnames'
 
 const styles = [
   'headline1',
@@ -21,10 +21,9 @@ const styles = [
 ]
 
 const Typography = {
-  view ({ children, attrs }) {
-    const { className, xattrs = {}, ...rest } = attrs
-    const cl = classnames(
-      className,
+  template ({ children, class: cl, ...rest }) {
+    cl = classnames(
+      cl,
       styles.map(name => {
         if (rest[name]) {
           delete rest[name]
@@ -33,9 +32,8 @@ const Typography = {
         return false
       })
     )
-
     return (
-      <span className={cl} {...xattrs} {...rest}>
+      <span class={cl} {...rest}>
         {children}
       </span>
     )
@@ -43,20 +41,10 @@ const Typography = {
 }
 
 styles.forEach(n => {
-  const klass = `mdc-typography--${n}`
-  const comp = {
-    view ({ children, attrs }) {
-      const { className, xattrs = {}, ...rest } = attrs
-      const cl = classnames(className, klass)
-      return (
-        <span className={cl} {...xattrs} {...rest}>
-          {children}
-        </span>
-      )
-    }
-  }
   const name = n.replace(n[0], n[0].toUpperCase())
-  Typography[name] = comp
+  Typography[name] = {
+    template: data => Typography.template({ ...data, [n]: true })
+  }
 })
 
 export default Typography

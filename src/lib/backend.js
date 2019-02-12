@@ -1,8 +1,9 @@
 'use strict'
 
-import m from 'mithril'
+import pTimeout from 'p-timeout'
 import config from '../config'
 import { decompressFromBase64 } from 'lz-string'
+import { buildQuery } from './url'
 
 export function authUser (creds) {
   return callBackend({
@@ -46,24 +47,67 @@ export function postMember ({ token, member }) {
     resource: '/member',
     method: 'POST',
     token,
-    data: { member }
+    data: { member },
+    noResponse: true
   })
 }
 
 function callBackend (options) {
-  const { resource, method, data = {}, token, query = {} } = options
-
-  const opts = {
+  const {
+    resource,
     method,
     data,
-    timeout: 30 * 1000
+    token,
+    query = {},
+    timeout = 30 * 10 * 1000,
+    noResponse
+  } = options
+
+  const fetchOpts = {
+    method,
+    headers: {}
+  }
+
+  if (data && method !== 'GET') {
+    fetchOpts.body = JSON.stringify(data)
+    fetchOpts.headers['content-type'] = 'application/json'
   }
 
   if (config.isTest) query.db = 'test'
+
   query.ts = Date.now()
-  opts.url = `${config.backend}${resource}?${m.buildQueryString(query)}`
+  const url = `${config.backend}${resource}${buildQuery(query)}`
+  if (token) {
+    fetchOpts.headers['Authorization'] = 'Bearer ' + token
+  }
+
+  return pTimeout(window.fetch(url, fetchOpts), timeout).then(response => {
+    if (response.status === 401) {
+      throw new Error('Not authorized')
+    } else if (!response.ok) {
+      throw new Error(`${response.status}: ${response.statusText}`)
+    }
+    if (noResponse) return
+    return response.json()
+  })
+}
+
+/*
+    delete opts.json
+
+  if (config.isTest) query.db = 'test'
+  query.ts = Date.now()
+  const url = `${config.backend}${resource}${buildQuery(query)}`
 
   if (token) opts.headers = { Authorization: 'Bearer ' + token }
 
-  return m.request(opts)
+  return ky(url, opts).then(response => {
+    if (response.status === 401) {
+      throw new Error('Not authorized')
+    } else if (!response.ok) {
+      throw new Error(`${response.status}: ${repsonse.statusText}`)
+    }
+    return response.json()
+  })
 }
+*/

@@ -1,67 +1,112 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../lib/hyperscript'
 
 import Drawer from './Material/Drawer'
 
-import pdsp from '../lib/pdsp'
-import store from '../store'
+import { views, actions } from '../store'
+import config from '../config'
 
-export default {
-  view ({ attrs: { open, onClose } }) {
-    const isSignedIn = store.auth.isSignedIn()
-    const url = m.route.get()
-    const list = buildList(isSignedIn, url)
+export default function Sidebar (vm) {
+  let cleanup = []
 
-    return (
-      <Drawer open={open} onClose={onClose}>
-        <Drawer.Header title='Menu' />
-        <Drawer.Content>{renderList(list, onClose)}</Drawer.Content>
-      </Drawer>
-    )
+  return {
+    hooks: {
+      didMount (vm) {
+        cleanup = [
+          views.auth.signedIn.on(() => vm.redraw()),
+          views.route.state.on(() => vm.redraw())
+        ]
+      },
+
+      willUnmount () {
+        cleanup.forEach(fn => fn())
+      }
+    },
+
+    render (vm, { children, open, ...rest }) {
+      // build the list of items in the sidebar
+      const isSignedIn = views.auth.signedIn()
+      const page = views.route.state().page
+      const list = buildList(isSignedIn, page)
+
+      return (
+        <Drawer open={open} {...rest}>
+          <Drawer.Header title='Menu' />
+          <Drawer.Content>
+            {list.map(({ selected, href, action, icon, text }) => (
+              <Drawer.Item
+                selected={selected}
+                href={config.basePath + href}
+                onclick={[onclick, action, open]}
+              >
+                <Drawer.ItemIcon>{icon}</Drawer.ItemIcon>
+                <Drawer.ItemText>{text}</Drawer.ItemText>
+              </Drawer.Item>
+            ))}
+          </Drawer.Content>
+        </Drawer>
+      )
+    }
   }
 }
 
-function renderList (list, onClose) {
-  return list.map(({ selected, href, icon, text }) => {
-    function onclick (e) {
-      pdsp(e)
-      m.route.set(href)
-      setTimeout(onClose)
-    }
-
-    return (
-      <Drawer.Item selected={selected} xattrs={{ href, onclick }}>
-        <Drawer.ItemIcon>{icon}</Drawer.ItemIcon>
-        <Drawer.ItemText>{text}</Drawer.ItemText>
-      </Drawer.Item>
-    )
-  })
+function onclick (action, open) {
+  action()
+  open(false)
+  return false
 }
 
-function buildList (isSignedIn, url) {
-  if (!isSignedIn) {
+function buildList (signedIn, page) {
+  if (!signedIn) {
     return [
-      { text: 'Login', icon: 'account_circle', href: '/login', selected: true }
+      {
+        text: 'Login',
+        icon: 'account_circle',
+        action: () => actions.route.toPage('login'),
+        href: '/login',
+        selected: true
+      }
     ]
   }
-  const list = []
-  let selected
-  list.push({ text: 'Members', icon: 'people', href: '/' })
-  if (/^\/member\/\d+$/.test(url)) {
-    list.push({ text: 'Member details', icon: 'person', href: url })
-    selected = 1
-  }
-  list.push({ text: 'New member', icon: 'person_add', href: '/member/new' })
-  list.push({ text: 'Spreadsheet', icon: 'grid_on', href: '/spreadsheet' })
-  list.push({ text: 'Log out', icon: 'close', href: '/logout' })
 
-  if (selected === undefined) {
-    list.forEach((item, i) => {
-      if (url === item.href) selected = i
-    })
-    if (selected === undefined) selected = 0
-  }
-  list[selected].selected = true
+  const list = [
+    {
+      text: 'Members',
+      icon: 'people',
+      action: () => actions.route.toPage('home'),
+      href: '/',
+      selected: page === 'home'
+    },
+    page === 'member' && {
+      text: 'Member details',
+      icon: 'person',
+      action: () => {},
+      href: views.route.url(),
+      selected: true
+    },
+    {
+      text: 'New member',
+      icon: 'person_add',
+      href: '/member/new',
+      action: () => actions.route.toPage('newmember')
+    },
+    {
+      text: 'Spreadsheet',
+      icon: 'grid_on',
+      href: '/spreadsheet',
+      action: () => actions.route.toPage('spreadsheet'),
+      selected: page === 'spreadsheet'
+    },
+    {
+      text: 'Log out',
+      icon: 'close',
+      href: '/logout',
+      action: () => actions.route.toPage('logout'),
+      selected: page === 'logout'
+    }
+  ].filter(Boolean)
+
+  if (!list.some(item => item.selected)) list[0].selected = true
   return list
 }

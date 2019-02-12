@@ -1,30 +1,38 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../../lib/hyperscript'
 
 import { MDCNotchedOutline } from '@material/notched-outline'
 
-export default function NotchedOutline () {
-  let control
-
-  return {
-    oncreate ({ dom }) {
-      control = new MDCNotchedOutline(dom)
-    },
-
-    onremove () {
-      control.destroy()
-    },
-
-    view ({ children, attrs }) {
-      const { xattrs = {}, ...rest } = attrs
-      return (
-        <div class='mdc-notched-outline' {...xattrs} {...rest}>
-          <div className='mdc-notched-outline__leading' />
-          <div className='mdc-notched-outline__notch'>{children}</div>
-          <div className='mdc-notched-outline__trailing' />
-        </div>
-      )
+const NotchedOutline = {
+  template ({ children, ...rest }) {
+    const attrs = {
+      ...rest,
+      _key: rest._key || rest._id || 'mdcNotchedOutline',
+      _hooks: { didInsert, willRecycle, willRemove }
     }
+
+    return (
+      <div class='mdc-notched-outline' {...attrs}>
+        <div class='mdc-notched-outline__leading' />
+        <div class='mdc-notched-outline__notch'>{children}</div>
+        <div class='mdc-notched-outline__trailing' />
+      </div>
+    )
   }
 }
+
+function willRecycle (prev, node) {
+  node.data = prev.data
+}
+
+function didInsert (node) {
+  node.data = node.data || {}
+  node.data.mdcNotchedOutline = new MDCNotchedOutline(node.el)
+}
+
+function willRemove (node) {
+  node.data.mdcNotchedOutline.destroy()
+}
+
+export default NotchedOutline

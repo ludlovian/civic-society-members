@@ -1,13 +1,14 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../lib/hyperscript'
 
 import Card from '../components/Material/Card'
 import Typography from '../components/Material/Typography'
 
-import classify from '../lib/classify'
+import classnames from 'classnames'
 import stylish from '../lib/stylish'
-import store from '../store'
+import { views, actions } from '../store'
+import defer from '../lib/defer'
 
 const style = `
   :self.scrim { padding: 16px; }
@@ -15,21 +16,20 @@ const style = `
   .card { padding: 16px 16px 32px; }
   .card .header { padding-bottom: 16px; }
 `
-export default {
-  oncreate () {
-    if (store.auth.isSignedIn()) store.auth.signOut()
-  },
+const Logout = {
+  template () {
+    if (views.auth.signedIn()) {
+      defer(actions.auth.signOut)
+    }
 
-  view () {
-    return classify(
-      stylish(style),
-      <div className='scrim'>
-        <Card className='card'>
-          <div className='header'>
+    return (
+      <div class={classnames(stylish(style), 'scrim')}>
+        <Card class='card'>
+          <div class='header'>
             <Typography headline5>Logged out</Typography>
           </div>
 
-          <div className='body'>
+          <div class='body'>
             <Typography body1>
               You have now logged out of the system. You must log back in before
               you can use it again.
@@ -40,3 +40,4 @@ export default {
     )
   }
 }
+export default Logout

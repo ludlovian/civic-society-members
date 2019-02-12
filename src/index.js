@@ -1,23 +1,14 @@
 'use strict'
 
 import '@babel/polyfill'
+import { createView } from 'domvm/dist/dev/domvm.dev'
 
-import m from 'mithril'
+import { init, start } from './store'
+import App from './components/App'
+
 import './style/index.scss'
 
-import routes from './routes'
-import store from './store'
+init()
+start()
 
-store.on(m.redraw)
-
-if (process.env.NODE_ENV !== 'production') {
-  window.m = m
-  window.store = store
-}
-
-if (store.auth.isSignedIn() && !store.members.wasLoadedRecently()) {
-  store.members.fetchMembers()
-}
-
-m.route.prefix('/civic-society-members')
-m.route(document.body, '/', routes)
+createView(App, {}).mount(document.getElementById('app'), true)

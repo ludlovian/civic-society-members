@@ -1,174 +1,169 @@
 'use strict'
 
+import { PS, P, S } from 'patchinko'
+
 import { loadFromLocal, saveToLocal } from '../lib/local'
 import * as backend from '../lib/backend'
 
 export default {
-  data: {
+  initial: {
     members: {},
     files: [],
     loaded: 0,
     filesLoaded: false
   },
 
-  actions: self => ({
-    storeMembers (_, members) {
-      if (!self.root.auth.isSignedIn()) return null
-      return {
-        loaded: Date.now(),
-        members
-      }
-    },
+  actions: ({ state, views, update, actions }) => {
+    //
+    // local store updates
+    //
+    function storeMembers (members) {
+      update({ members, loaded: Date.now() })
+    }
 
-    storeFiles (_, files) {
-      if (!self.root.auth.isSignedIn()) return null
-      return {
-        files,
-        filesLoaded: true
-      }
-    },
+    function storeFiles (files) {
+      update({ files, filesLoaded: true })
+    }
 
-    replaceMember ({ members }, member) {
-      const { auth, engine } = self.root
-      if (!auth.isSignedIn()) return
-      engine
-        .onIdle()
-        .then(() =>
-          engine.execute(() =>
-            backend.postMember({ member, token: auth.getToken() })
-          )
-        )
-      return {
-        members: {
-          ...members,
-          [member.id]: member
-        }
-      }
-    },
+    function storeMember (member) {
+      update({
+        members: PS({}, { [member.id]: member })
+      })
+    }
 
-    updateMember (_, member, patch) {
+    function clear () {
+      update({
+        members: {},
+        files: [],
+        loaded: 0,
+        filesLoaded: false
+      })
+    }
+
+    //
+    // backend calls
+    //
+    function fetchMembers () {
+      return actions.engine.execute(async () => {
+        const token = views.auth.token()
+        if (!token) return
+        storeMembers(await backend.fetchMembers({ token }))
+      })
+    }
+
+    function fetchFiles (always = false) {
+      if (!always && state().filesLoaded) return
+      return actions.engine.execute(async () => {
+        const token = views.auth.token()
+        if (!token) return
+        storeFiles(await backend.fetchFiles({ token }))
+      })
+    }
+
+    function fetchAll () {
+      return Promise.all([fetchMembers(), fetchFiles(true)])
+    }
+
+    async function postMember (member) {
+      await views.engine.idle()
+      const token = views.auth.token()
+      if (!token) return
+      return actions.engine.execute(() => backend.postMember({ member, token }))
+    }
+
+    function storeAndPostMember (member) {
+      storeMember(member)
+      postMember(member)
+    }
+
+    //
+    // business logic
+    //
+    function updateMember (member, patch) {
       if (!Object.keys(patch).length) return
       const txn = {
         date: Date.now(),
-        user: self.root.auth.getUser(),
+        user: views.auth.user(),
         member: {
           id: member.id,
           ...patch
         }
       }
-      self.replaceMember({
-        ...member,
-        ...patch,
-        history: [...member.history, txn]
-      })
-    },
+      member = P({}, member, patch, { history: S(txns => txns.concat(txn)) })
+      storeAndPostMember(member)
+    }
 
-    addPayment (_, member, payment) {
-      const pmt = {
-        id: member.id,
-        ...payment
-      }
+    function addPayment (member, pmt) {
+      pmt = P({}, { id: member.id }, pmt)
       const txn = {
         date: Date.now(),
-        user: self.root.auth.getUser(),
+        user: views.auth.user(),
         payment: pmt
       }
-      self.replaceMember({
-        ...member,
-        payments: [...member.payments, pmt],
-        history: [...member.history, txn]
+      member = P({}, member, {
+        payments: S(pmts => pmts.concat(pmt)),
+        history: S(txns => txns.concat(txn))
       })
-    },
+      storeAndPostMember(member)
+    }
 
-    async fetchMembers () {
-      const { auth, engine } = self.root
-      if (!auth.isSignedIn()) return
-      return engine.execute(async () => {
-        const token = auth.getToken()
-        self.storeMembers(await backend.fetchMembers({ token }))
-      })
-    },
-
-    async fetchFiles () {
-      const { auth, engine } = self.root
-      if (!auth.isSignedIn()) return
-      return engine.execute(async () => {
-        const token = auth.getToken()
-        self.storeFiles(await backend.fetchFiles({ token }))
-      })
-    },
-
-    fetchAll () {
-      return Promise.all([self.fetchMembers(), self.fetchFiles()]).then(
-        () => null
-      )
-    },
-
-    ensureFilesLoaded ({ filesLoaded }) {
-      if (filesLoaded) return
-      return self.fetchFiles()
-    },
-
-    clear: () => ({
-      members: {},
-      files: [],
-      loaded: 0,
-      filesLoaded: false
-    }),
-
-    addNewMember ({ members }, id) {
+    function createMember () {
       const fields = 'sortName address tel email type notes postType giftAid usualMethod'.split(
         ' '
       )
-      const mbr = { id }
-      fields.forEach(k => {
-        mbr[k] = ''
+      const id =
+        1 + Math.max(...Object.values(state().members).map(mbr => mbr.id))
+      const mbr = P({ id }, fields.reduce((o, k) => ({ ...o, [k]: '' }), {}), {
+        payments: [],
+        history: []
       })
-      mbr.payments = []
-      mbr.history = []
-      return {
-        members: {
-          ...members,
-          [id]: mbr
-        }
-      }
-    },
-
-    onInit () {
-      const data = loadFromLocal({ key: 'members' })
-      // reset filesLoaded
-      return { ...data, filesLoaded: false }
+      storeMember(mbr)
+      return mbr
     }
-  }),
 
-  onChange (snap) {
-    // TODO - change compress to true before release
-    saveToLocal({ key: 'members', compress: false }, snap)
+    function init () {
+      const data = loadFromLocal({ key: 'members' })
+      update({ ...data, filesLoaded: false })
+    }
+
+    function start () {
+      if (views.auth.signedIn() && !views.members.loadedRecently()) {
+        actions.members.fetchMembers()
+      }
+      state.on(snap => {
+        saveToLocal({ key: 'members' }, snap)
+      })
+    }
+
+    return {
+      init,
+      start,
+      clear,
+      fetchAll,
+      fetchMembers,
+      fetchFiles,
+      updateMember,
+      addPayment,
+      createMember
+    }
   },
 
-  views: self => ({
-    isLoaded: ({ loaded }) => self.root.auth.isSignedIn() && !!loaded,
+  views: ({ state }) => ({
+    // streams
+    loaded: state.map(s => s.loaded).dedupe(),
+    members: state.map(s => s.members),
 
-    wasLoadedRecently ({ loaded }, period = 10 * 60 * 1000) {
-      return self.root.auth.isSignedIn() && Date.now() - loaded < period
+    // functions
+    loadedRecently (period = 10 * 60 * 1000) {
+      return Date.now() - state().loaded < period
     },
 
-    members: ({ members }) => members,
-
-    getMember ({ members, files }, id) {
+    member (id) {
+      id = parseInt(id)
+      const { members, files } = state()
       const member = members[id]
       if (!member) return
-      id = parseInt(id)
-      return {
-        ...member,
-        files: files.filter(f => f.id === id)
-      }
-    },
-
-    getNewMember ({ members }) {
-      const id = 1 + Math.max(...Object.values(members).map(m => m.id))
-      self.addNewMember(id)
-      return self.getMember(id)
+      return P({}, member, { files: files.filter(f => f.id === id) })
     }
   })
 }

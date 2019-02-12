@@ -1,14 +1,12 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../lib/hyperscript'
 
 import TopAppBar from './Material/TopAppBar'
 
-import { classnames } from '../lib/classify'
-import valoo from '../lib/valoo'
+import classnames from 'classnames'
 import stylish from '../lib/stylish'
-import pdsp from '../lib/pdsp'
-import { getRoute } from '../lib/routeutil'
+import { actions } from '../store'
 
 const style = `
   .icon { padding-right: 20px; }
@@ -27,57 +25,53 @@ const style = `
   }
 `
 
-export default function MemberSearch () {
-  let input
-  let expanded = valoo(false)
-  let text = getRoute().query.q || ''
+export default function MemberSearch (vm) {
+  let expanded = false
+  let text = ''
 
-  expanded.on(m.redraw)
-
-  function onClickIcon (e) {
-    pdsp(e)
-    expanded(!expanded())
-    if (expanded()) setTimeout(() => input.focus(), 20)
-  }
-
-  function onSearch (e) {
-    pdsp(e)
-    text = e.target.value.toLowerCase()
-    const url = text ? `/?q=${text}` : '/'
-    if (url !== m.route.get()) m.route.set(url)
-    if (!text) expanded(false)
-  }
-
-  return {
-    oncreate ({ dom }) {
-      input = dom.querySelector('.mdc-text-field__input')
-    },
-
-    view () {
-      const clStyle = classnames(stylish(style))
-      const clInput = classnames(
-        'text-input',
-        'mdc-text-field',
-        expanded() ? 'expanded' : 'collapsed'
-      )
-
-      return (
-        <TopAppBar.Section className={clStyle} alignEnd>
-          <TopAppBar.Icon className='icon' xattrs={{ onclick: onClickIcon }}>
-            search
-          </TopAppBar.Icon>
-
-          <div className={clInput}>
-            <input
-              className='mdc-text-field__input'
-              type='search'
-              placeholder='search'
-              value={text}
-              onsearch={onSearch}
-            />
-          </div>
-        </TopAppBar.Section>
-      )
+  function onclick (vm, data) {
+    expanded = !expanded
+    if (expanded) {
+      setTimeout(() => vm.refs.input.el.focus(), 20)
     }
+    vm.redraw()
+    return false
+  }
+
+  function onsearch (vm, e) {
+    text = e.target.value
+    if (!text) expanded = false
+
+    actions.route.updateData({ filter: text.toLowerCase() })
+    vm.redraw()
+    return false
+  }
+
+  return function render (vm) {
+    const cl = stylish(style)
+    const clInput = classnames(
+      'text-input',
+      'mdc-text-field',
+      expanded ? 'expanded' : 'collapsed'
+    )
+    return (
+      <TopAppBar.Section class={cl} alignEnd>
+        <TopAppBar.Icon class='icon' onclick={[onclick, vm]}>
+          search
+        </TopAppBar.Icon>
+
+        <div class={clInput}>
+          <input
+            _ref='input'
+            id='memberSearch'
+            class='mdc-text-field__input'
+            type='search'
+            placeholder='search'
+            value={text}
+            onsearch={[onsearch, vm]}
+          />
+        </div>
+      </TopAppBar.Section>
+    )
   }
 }

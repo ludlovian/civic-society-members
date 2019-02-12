@@ -1,46 +1,56 @@
 'use strict'
 
-import m from 'mithril'
+import h from '../../lib/hyperscript'
 
 import { MDCRipple } from '@material/ripple'
 import Button from './Button'
 
-import { classnames } from '../../lib/classify'
+import classnames from 'classnames'
+import memoize from '../../lib/memoize'
 
-export default function Card () {
-  let mdcRipple
-
-  return {
-    oncreate ({ dom, attrs }) {
-      if (attrs.ripple) mdcRipple = new MDCRipple(dom)
-    },
-
-    onremove () {
-      if (mdcRipple) mdcRipple.destroy()
-    },
-
-    view ({ children, attrs }) {
-      const { className, outlined, ripple, xattrs = {}, ...rest } = attrs
-      const cl = classnames(className, 'mdc-card', {
-        'mdc-card--outlined': outlined
-      })
-
-      return (
-        <div className={cl} {...xattrs} {...rest}>
-          {children}
-        </div>
-      )
+const getHooks = memoize(ripple => ({
+  didInsert (node) {
+    node.data = node.data || {}
+    if (ripple) {
+      node.data.mdcRipple = new MDCRipple(node.el)
     }
+  },
+
+  willRecycle (prev, node) {
+    node.data = prev.data
+  },
+
+  willRemove (node) {
+    if (ripple) {
+      node.data.mdcRipple.destroy()
+    }
+  }
+}))
+
+const Card = {
+  template ({ children, class: cl, outlined, ripple, ...rest }) {
+    cl = classnames(cl, 'mdc-card', outlined && 'mdc-card--outlined')
+
+    const attrs = {
+      ...rest,
+      _key: rest._key || rest.id || 'mdcButton',
+      _hooks: getHooks(ripple)
+    }
+
+    return (
+      <div class={cl} {...attrs}>
+        {children}
+      </div>
+    )
   }
 }
 
 Card.Actions = {
-  view ({ children, attrs }) {
-    const { className, xattrs = {}, ...rest } = attrs
-    const cl = classnames(className, 'mdc-card__actions')
+  template ({ children, class: cl, ...rest }) {
+    cl = classnames(cl, 'mdc-card__actions')
 
     return (
-      <div className={cl} {...xattrs} {...rest}>
+      <div class={cl} {...rest}>
         {children}
       </div>
     )
@@ -48,12 +58,11 @@ Card.Actions = {
 }
 
 Card.ActionButton = {
-  view ({ children, attrs }) {
-    const { className, xattrs = {}, ...rest } = attrs
-    const cl = classnames(className, 'mdc-card', 'mdc-card__action--button')
+  template ({ children, class: cl, ...rest }) {
+    cl = classnames(cl, 'mdc-card', 'mdc-card__action--button')
 
     return (
-      <Button className={cl} {...xattrs} {...rest}>
+      <Button class={cl} {...rest}>
         {children}
       </Button>
     )
@@ -61,12 +70,11 @@ Card.ActionButton = {
 }
 
 Card.ActionIcons = {
-  view ({ children, attrs }) {
-    const { className, xattrs = {}, ...rest } = attrs
-    const cl = classnames(className, 'mdc-card__action-icons')
+  template ({ children, class: cl, ...rest }) {
+    cl = classnames(cl, 'mdc-card__action-icons')
 
     return (
-      <div className={cl} {...xattrs} {...rest}>
+      <div class={cl} {...rest}>
         {children}
       </div>
     )
@@ -74,10 +82,9 @@ Card.ActionIcons = {
 }
 
 Card.ActionIcon = {
-  view ({ children, attrs }) {
-    const { className, xattrs = {}, ...rest } = attrs
-    const cl = classnames(
-      className,
+  template ({ children, class: cl, ...rest }) {
+    cl = classnames(
+      cl,
       'material-icons',
       'mdc-icon-button',
       'mdc-card__action',
@@ -85,9 +92,11 @@ Card.ActionIcon = {
     )
 
     return (
-      <a className={cl} {...xattrs} {...rest}>
+      <a class={cl} {...rest}>
         {children}
       </a>
     )
   }
 }
+
+export default Card
