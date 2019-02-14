@@ -1,28 +1,21 @@
 'use strict'
 
-import h from '../lib/hyperscript'
-
-import Drawer from './Material/Drawer'
-
+import { Drawer } from './Material'
 import { version } from '../../package.json'
+import stream from '../lib/stream'
 import { views, actions } from '../store'
 import config from '../config'
 
 export default function Sidebar (vm) {
-  let cleanup = []
+  const monitor = stream.combine(
+    () => vm.redraw(),
+    [views.auth.signedIn, views.route.state],
+    { skip: true }
+  )
 
   return {
     hooks: {
-      didMount (vm) {
-        cleanup = [
-          views.auth.signedIn.on(() => vm.redraw()),
-          views.route.state.on(() => vm.redraw())
-        ]
-      },
-
-      willUnmount () {
-        cleanup.forEach(fn => fn())
-      }
+      willUnmount: () => monitor.end(true)
     },
 
     render (vm, { children, open, ...rest }) {
@@ -31,22 +24,22 @@ export default function Sidebar (vm) {
       const page = views.route.state().page
       const list = buildList(isSignedIn, page)
 
-      return (
-        <Drawer open={open} {...rest}>
-          <Drawer.Header title='Menu' subtitle={'v' + version} />
-          <Drawer.Content>
-            {list.map(({ selected, href, action, icon, text }) => (
-              <Drawer.Item
-                selected={selected}
-                href={config.basePath + href}
-                onclick={[onclick, action, open]}
-              >
-                <Drawer.ItemIcon>{icon}</Drawer.ItemIcon>
-                <Drawer.ItemText>{text}</Drawer.ItemText>
-              </Drawer.Item>
-            ))}
-          </Drawer.Content>
-        </Drawer>
+      return Drawer(
+        { ...rest, open },
+        Drawer.Header({ title: 'Menu', subtitle: 'v' + version }),
+        Drawer.Content(
+          list.map(({ selected, href, action, icon, text }) =>
+            Drawer.Item(
+              {
+                selected,
+                href: config.basePath + href,
+                onclick: [onclick, action, open]
+              },
+              Drawer.ItemIcon(icon),
+              Drawer.ItemText(text)
+            )
+          )
+        )
       )
     }
   }

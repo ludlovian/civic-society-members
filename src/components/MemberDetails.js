@@ -1,12 +1,10 @@
 'use strict'
 
-import h from '../lib/hyperscript'
-
-import Card from '../components/Material/Card'
-import Button from '../components/Material/Button'
-
+import { el, classify, vw } from '../domvm'
+import { Card, Button } from '../components/Material'
 import { views, actions } from '../store'
 import stylish from '../lib/stylish'
+import stream from '../lib/stream'
 import {
   FormState,
   FieldState,
@@ -17,7 +15,7 @@ import {
 import Field from '../components/Field'
 import schema from '../schema'
 
-export default function MemberDetails () {
+export default function MemberDetails (vm, { member }) {
   const style = `
     >form { padding-top: 20px; }
 
@@ -35,8 +33,14 @@ export default function MemberDetails () {
     .buttons>.mdc-button { margin-left: 12px; }
   `
 
-  let cleanup = []
-  let form
+  let monitor = stream.combine(
+    () => vm.redraw(),
+    [views.route.state, views.members.members],
+    { skip: true }
+  )
+
+  let form = getForm(member)
+  window.form = form
 
   function onedit (member) {
     actions.route.updateData({ edit: true })
@@ -60,135 +64,122 @@ export default function MemberDetails () {
   }
 
   return {
-    init (vm, { member }) {
-      form = getForm(member)
-    },
     hooks: {
-      didMount (vm, { member }) {
-        cleanup = [
-          views.route.state.on(() => vm.redraw()),
-          views.members.members.on(() => vm.redraw())
-        ]
-      },
-      willUnmount () {
-        cleanup.forEach(f => f())
-      }
+      willUnmount: () => monitor.end(true)
     },
 
     render (vm, { member }) {
       const { edit } = views.route.state().data
-      const cl = stylish(style)
-      return (
-        <div class={cl}>
-          <form>
-            <Field
-              class='field'
-              id='sortName'
-              label='Sort name'
-              fieldState={form.$.sortName}
-              disabled={!edit}
-            />
-
-            <Field
-              class='field'
-              id='address'
-              label='Address'
-              fieldState={form.$.address}
-              type='textarea'
-              rows='5'
-              disabled={!edit}
-            />
-
-            <Field
-              class='field'
-              id='tel'
-              label='Telephone'
-              fieldState={form.$.tel}
-              disabled={!edit}
-            />
-
-            <Field
-              class='field'
-              id='email'
-              label='Email address'
-              fieldState={form.$.email}
-              disabled={!edit}
-            />
-
-            <Field.Select
-              class='field'
-              id='mtype'
-              label='Membership type'
-              fieldState={form.$.type}
-              values={schema.member.type}
-              disabled={!edit}
-            />
-
-            <Field
-              class='field'
-              id='notes'
-              label='Notes'
-              fieldState={form.$.notes}
-              type='textarea'
-              rows='3'
-              disabled={!edit}
-            />
-
-            <Field.Select
-              class='field'
-              id='postType'
-              label='Postage'
-              fieldState={form.$.postType}
-              values={schema.member.postType}
-              disabled={!edit}
-            />
-
-            <Field.Select
-              class='field'
-              id='giftAid'
-              label='Gift Aid'
-              fieldState={form.$.giftAid}
-              values={schema.member.giftAid}
-              disabled={!edit}
-            />
-
-            <Field.Select
-              class='field'
-              id='usualMethod'
-              label='Pay by'
-              fieldState={form.$.usualMethod}
-              values={schema.member.usualMethod}
-              disabled={!edit}
-            />
-          </form>
-
-          <Card.Actions class='buttons'>
-            {edit && (
-              <Button
-                key='cancel'
-                id='cancel'
-                ripple
-                onclick={[oncancel, member]}
-              >
-                Cancel
-              </Button>
-            )}
-
-            <Button
-              key='edit'
-              id='edit'
-              ripple
-              raised={edit}
-              onclick={[edit ? onsave : onedit, member]}
-            >
-              {edit ? 'Save' : 'Edit'}
-            </Button>
-          </Card.Actions>
-        </div>
+      return classify(
+        stylish(style),
+        el(
+          'div',
+          el('form', MemberFields({ form, edit })),
+          MemberButtons({ edit, member, onsave, oncancel, onedit })
+        )
       )
     }
   }
 }
+
+const MemberFields = ({ form, edit }) => [
+  vw(Field, {
+    class: 'field',
+    id: 'sortName',
+    label: 'Sort name',
+    fieldState: form.$.sortName,
+    disabled: !edit
+  }),
+  vw(Field, {
+    class: 'field',
+    id: 'address',
+    label: 'Address',
+    fieldState: form.$.address,
+    type: 'textarea',
+    rows: 5,
+    disabled: !edit
+  }),
+  vw(Field, {
+    class: 'field',
+    id: 'tel',
+    label: 'Telephone',
+    fieldState: form.$.tel,
+    disabled: !edit
+  }),
+  vw(Field, {
+    class: 'field',
+    id: 'email',
+    label: 'Email address',
+    fieldState: form.$.email,
+    disabled: !edit
+  }),
+  vw(Field.Select, {
+    class: 'field',
+    id: 'mtype',
+    label: 'Membership type',
+    fieldState: form.$.type,
+    values: schema.member.type,
+    disabled: !edit
+  }),
+  vw(Field, {
+    class: 'field',
+    id: 'notes',
+    label: 'Notes',
+    fieldState: form.$.notes,
+    type: 'textarea',
+    rows: 3,
+    disabled: !edit
+  }),
+  vw(Field.Select, {
+    class: 'field',
+    id: 'postType',
+    label: 'Postage',
+    fieldState: form.$.postType,
+    values: schema.member.postType,
+    disabled: !edit
+  }),
+  vw(Field.Select, {
+    class: 'field',
+    id: 'giftAid',
+    label: 'Gift Aid',
+    fieldState: form.$.giftAid,
+    values: schema.member.giftAid,
+    disabled: !edit
+  }),
+  vw(Field.Select, {
+    class: 'field',
+    id: 'usualMethod',
+    label: 'Pay by',
+    fieldState: form.$.usualMethod,
+    values: schema.member.usualMethod,
+    disabled: !edit
+  })
+]
+
+const MemberButtons = ({ edit, member, oncancel, onsave, onedit }) =>
+  Card.Actions(
+    { class: 'buttons' },
+    edit &&
+      Button(
+        {
+          _key: 'cancel',
+          id: 'cancel',
+          ripple: true,
+          onclick: [oncancel, member]
+        },
+        'Cancel'
+      ),
+    Button(
+      {
+        _key: 'edit',
+        id: 'edit',
+        ripple: true,
+        raised: edit,
+        onclick: [edit ? onsave : onedit, member]
+      },
+      edit ? 'Save' : 'Edit'
+    )
+  )
 
 function getForm (mbr) {
   return new FormState({

@@ -1,9 +1,9 @@
 'use strict'
 
-import h from '../../lib/hyperscript'
+import { h, hargs, classify, el } from '../../domvm'
 
 import { MDCDrawer } from '@material/drawer'
-import Icon from './Icon'
+import { Icon } from '.'
 
 import classnames from 'classnames'
 import memoize from '../../lib/memoize'
@@ -35,86 +35,47 @@ const getHooks = memoize((onOpen, onClose, open) => ({
   }
 }))
 
-const Drawer = {
-  template ({ children, class: cl, open, onOpen, onClose, ...rest }) {
-    const attrs = {
-      _key: rest._key || rest.id || 'mdcDrawer',
-      _hooks: getHooks(onOpen, onClose, open)
-    }
-
-    cl = classnames(cl, 'mdc-drawer-container')
-
-    return (
-      <div class={cl} {...rest}>
-        <aside class='mdc-drawer mdc-drawer--modal' {...attrs}>
-          {children}
-        </aside>
-        <div class='mdc-drawer-scrim' />
-      </div>
-    )
-  }
+export default function Drawer (...args) {
+  const [{ open, onOpen, onClose, ...rest }, children] = hargs(args)
+  return el('.mdc-drawer-container', rest, [
+    el(
+      'aside.mdc-drawer.mdc-drawer--modal',
+      {
+        _key: rest._key || rest.id || 'mdcDrawer',
+        _hooks: getHooks(onOpen, onClose, open)
+      },
+      children
+    ),
+    el('div.mdc-drawer-scrim')
+  ])
 }
 
-Drawer.Header = {
-  template ({ children, class: cl, title, subtitle, ...rest }) {
-    cl = classnames(cl, 'mdc-drawer__header')
-
-    return (
-      <div class={cl} {...rest}>
-        {title && <h3 class='mdc-drawer__title'>{title}</h3>}
-        {subtitle && <h6 class='mdc-drawer__subtitle'>{subtitle}</h6>}
-        {children}
-      </div>
-    )
-  }
+Drawer.Header = (...args) => {
+  const [{ title, subtitle, ...rest }, children] = hargs(args)
+  return el('.mdc-drawer__header', rest, [
+    title && el('h3.mdc-drawer__title', title),
+    subtitle && el('h6.mdc-drawer__subtitle', subtitle),
+    children
+  ])
 }
 
-Drawer.Content = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(cl, 'mdc-drawer__content')
-
-    return (
-      <div class={cl} {...rest}>
-        <nav class='mdc-list'>{children}</nav>
-      </div>
-    )
-  }
+Drawer.Content = (...args) => {
+  const [attrs, children] = hargs(args)
+  return el('.mdc-drawer__content', attrs, [el('nav.mdc-list', children)])
 }
 
-Drawer.Item = {
-  template ({ children, class: cl, selected, ...rest }) {
-    cl = classnames(cl, 'mdc-list-item', selected && 'mdc-list-item--activated')
-
-    return (
-      <a class={cl} {...rest} aria-selected={selected}>
-        {children}
-      </a>
-    )
-  }
+Drawer.Item = (...args) => {
+  const [{ selected, ...rest }, children] = hargs(args)
+  return el(
+    'a.mdc-list-item',
+    {
+      ...rest,
+      class: classnames(rest.class, selected && 'mdc-list-item--activated')
+    },
+    children
+  )
 }
 
-Drawer.ItemIcon = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(cl, 'mdc-list-item__graphic')
+Drawer.ItemIcon = (...args) => classify('mdc-list-item__graphic', Icon(...args))
 
-    return (
-      <Icon class={cl} {...rest} aria-hidden='true'>
-        {children}
-      </Icon>
-    )
-  }
-}
-
-Drawer.ItemText = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(cl, 'mdc-list-item--text')
-
-    return (
-      <span class={cl} {...rest}>
-        {children}
-      </span>
-    )
-  }
-}
-
-export default Drawer
+Drawer.ItemText = (...args) => h('span.mdc-list-item--text', ...args)

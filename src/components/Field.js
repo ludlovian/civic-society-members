@@ -1,74 +1,61 @@
 'use strict'
 
-import h from '../lib/hyperscript'
+import { el, classify } from '../domvm'
 
-import TextField from './Material/TextField'
-import Select from './Material/Select'
-
-import classnames from 'classnames'
+import { TextField, Select } from './Material'
 import stylish from '../lib/stylish'
 
-export default function Field (vm) {
+export default function Field (vm, { fieldState }) {
   const style = `
     :self>.mdc-text-field+.mdc-text-field-helper-text--validation-msg {
       color: red;
     }
   `
+  let monitor = fieldState.state.map(() => vm.redraw(), { skip: true })
 
-  function onchange (fieldState, e) {
+  function onchange (e) {
     fieldState.text(e.target.value)
-    return false
   }
-
-  let cleanup = []
 
   return {
     hooks: {
-      didMount (vm, { fieldState }) {
-        cleanup = [fieldState.state.on(() => vm.redraw())]
-      },
-      willUnmount () {
-        cleanup.forEach(f => f())
-      }
+      willUnmount: () => monitor.end(true)
     },
 
-    render (vm, { class: cl, fieldState, ...rest }) {
-      cl = classnames(cl, stylish(style))
-      return (
-        <TextField
-          class={cl}
-          {...rest}
-          value={fieldState.state().text}
-          helperText={fieldState.state().error}
-          persistent
-          validationMsg
-          onchange={[onchange, fieldState]}
-        />
+    render (vm, { fieldState, ...rest }) {
+      return classify(
+        stylish(style),
+        TextField({
+          ...rest,
+          value: fieldState.state().text,
+          helperText: fieldState.state().error,
+          persistent: true,
+          validationMsg: true,
+          onchange
+        })
       )
     }
   }
 }
 
-Field.Select = function FieldSelect (vm) {
+Field.Select = function FieldSelect (vm, { fieldState }) {
   const style = `
     :self>.mdc-select+.mdc-select-helper-text--validation-msg {
       color: red;
     }
   `
+  function onchange (e) {
+    fieldState.text(e.detail.value)
+  }
 
-  let cleanup = []
+  let monitor = fieldState.state.map(() => vm.redraw(), { skip: true })
 
   return {
     hooks: {
-      didMount (vm, { fieldState }) {
-        cleanup = [fieldState.state.on(() => vm.redraw())]
-      },
-      willUnmount () {
-        cleanup.forEach(f => f())
-      }
+      willUnmount: () => monitor.end(true)
     },
 
-    render (vm, { class: cl, fieldState, values, ...rest }) {
+    render (vm, { fieldState, values, ...rest }) {
       const curr = fieldState.state().text
       const options = values.map(([value, text]) => ({
         value,
@@ -84,25 +71,19 @@ Field.Select = function FieldSelect (vm) {
           hidden: true
         })
       }
-      cl = classnames(cl, stylish(style))
 
-      function onchange (e) {
-        fieldState.text(e.detail.value)
-      }
-
-      return (
-        <Select
-          class={cl}
-          {...rest}
-          helperText={fieldState.state().error}
-          persistent
-          validationMsg
-          onchange={onchange}
-        >
-          {options.map(({ text, ...rest }) => (
-            <option {...rest}>{text}</option>
-          ))}
-        </Select>
+      return classify(
+        stylish(style),
+        Select(
+          {
+            ...rest,
+            helperText: fieldState.state().error,
+            persistent: true,
+            validationMsg: true,
+            onchange
+          },
+          options.map(({ text, ...rest }) => el('option', rest, text))
+        )
       )
     }
   }

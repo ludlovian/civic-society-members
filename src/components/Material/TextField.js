@@ -1,10 +1,8 @@
 'use strict'
 
-import h from '../../lib/hyperscript'
-
+import { el, hargs } from '../../domvm'
 import { MDCTextField } from '@material/textfield'
-
-import NotchedOutline from './NotchedOutline'
+import { NotchedOutline } from '.'
 import classnames from 'classnames'
 
 const getHooks = () => ({
@@ -21,73 +19,68 @@ const getHooks = () => ({
   }
 })
 
-const TextField = {
-  template ({
-    class: cl,
-    id,
-    type,
-    label,
-    disabled,
-    value,
-    helperText,
-    persistent,
-    validationMsg,
-    ...rest
-  }) {
-    const clControl = classnames('mdc-text-field', {
-      'mdc-text-field--outlined': label,
-      'mdc-text-field--textarea': type === 'textarea',
-      'mdc-text-field--disabled': disabled
-    })
-
-    const Elem = type === 'textarea' ? 'textarea' : 'input'
-
-    const clLabel = classnames('mdc-floating-label', {
-      'mdc-floating-label--float-above': value
-    })
-
-    const clHelperText = classnames('mdc-text-field-helper-text', {
-      'mdc-text-field-helper-text--persistent': persistent,
-      'mdc-text-field-helper-text--validation-msg': validationMsg
-    })
-
-    const attrs = {
-      _hooks: getHooks(),
-      _key: id + '-mdc-text-field'
+export default function TextField (...args) {
+  const [
+    {
+      id,
+      type,
+      label,
+      disabled,
+      value,
+      helperText,
+      persistent,
+      validationMsg,
+      class: cl,
+      ...rest
     }
-    const _type = {}
-    if (type !== 'textarea') _type.type = type
+  ] = hargs(args)
 
-    return (
-      <div class={cl}>
-        <div class={clControl} {...attrs}>
-          <Elem
-            class='mdc-text-field__input'
-            {...rest}
-            value={value}
-            id={id}
-            {..._type}
-            disabled={disabled}
-            aria-controls={helperText !== undefined && `${id}-helper-text`}
-          />
-
-          {label && (
-            <NotchedOutline>
-              <label class={clLabel} for={id}>
-                {label}
-              </label>
-            </NotchedOutline>
-          )}
-        </div>
-
-        {helperText !== undefined && (
-          <p class={clHelperText} aria-hidden='true' id={`${id}-helper-text`}>
-            {helperText}
-          </p>
-        )}
-      </div>
-    )
-  }
+  return el(
+    'div',
+    { class: cl },
+    el(
+      '.mdc-text-field',
+      {
+        class: classnames(
+          label && 'mdc-text-field--outlined',
+          type === 'textarea' && 'mdc-text-field--textarea',
+          disabled && 'mdc-text-field--disabled'
+        ),
+        _hooks: getHooks(),
+        _key: id + '-mdc-text-field'
+      },
+      el(type === 'textarea' ? 'textarea' : 'input', {
+        ...rest,
+        class: 'mdc-text-field__input',
+        ...(type === 'textarea' ? {} : { type }),
+        value,
+        disabled,
+        id
+      }),
+      label &&
+        NotchedOutline(
+          el(
+            'label.mdc-floating-label',
+            {
+              class: classnames(value && 'mdc-floating-label--float-above'),
+              for: id
+            },
+            label
+          )
+        )
+    ),
+    helperText !== undefined &&
+      el(
+        'p.mdc-text-field-helper-text',
+        {
+          class: classnames(
+            persistent && 'mdc-text-field-helper-text--persistent',
+            validationMsg && 'mdc-text-field-helper-text--validation-msg'
+          ),
+          'aria-hidden': 'true',
+          id: `${id}-helper-text`
+        },
+        helperText
+      )
+  )
 }
-
-export default TextField

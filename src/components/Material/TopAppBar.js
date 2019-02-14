@@ -1,10 +1,9 @@
 'use strict'
 
-import h from '../../lib/hyperscript'
+import { classify, h, hargs, el } from '../../domvm'
 
 import { MDCTopAppBar } from '@material/top-app-bar/index'
 
-import classnames from 'classnames'
 import memoize from '../../lib/memoize'
 
 const getHooks = memoize(onNav => ({
@@ -24,65 +23,39 @@ const getHooks = memoize(onNav => ({
   }
 }))
 
-const TopAppBar = {
-  template ({ children, class: cl, fixed, onNav, ...rest }) {
-    cl = classnames(cl, 'mdc-top-app-bar', fixed && 'mdc-top-app-bar--fixed')
-    const attrs = {
-      ...rest,
-      _key: rest._key || rest.id || 'mdcTopAppBar',
-      _hooks: getHooks(onNav)
-    }
-    return (
-      <header class={cl} {...attrs}>
-        {children}
-      </header>
+const TopAppBar = (...args) => {
+  const [{ fixed, onNav, ...rest }, children] = hargs(args)
+  return classify(
+    fixed && 'mdc-top-app-bar--fixed',
+    el(
+      'header.mdc-top-app-bar',
+      {
+        ...rest,
+        _key: rest._key || rest.id || 'mdcTopAppBar',
+        _hooks: getHooks(onNav)
+      },
+      children
     )
-  }
+  )
 }
 
-TopAppBar.Row = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(cl, 'mdc-top-app-bar__row')
+TopAppBar.Row = (...args) => h('.mdc-top-app-bar__row', ...args)
 
-    return (
-      <div class={cl} {...rest}>
-        {children}
-      </div>
-    )
-  }
+TopAppBar.Section = (...args) => {
+  const [{ alignStart, alignEnd, ...rest }, children] = hargs(args)
+  return classify(
+    alignStart && 'mdc-top-app-bar__section--align-start',
+    alignEnd && 'mdc-top-app-bar__section--align-end',
+    el('section.mdc-top-app-bar__section', rest, children)
+  )
 }
 
-TopAppBar.Section = {
-  template ({ children, class: cl, alignStart, alignEnd, ...rest }) {
-    cl = classnames(
-      cl,
-      'mdc-top-app-bar__section',
-      alignStart && 'mdc-top-app-bar__section--align-start',
-      alignEnd && 'mdc-top-app-bar__section--align-end'
-    )
-
-    return (
-      <section class={cl} {...rest}>
-        {children}
-      </section>
-    )
-  }
-}
-
-TopAppBar.Icon = {
-  template ({ children, class: cl, navigation, ...rest }) {
-    cl = classnames(
-      cl,
-      'material-icons',
-      navigation && 'mdc-top-app-bar__navigation-icon'
-    )
-
-    return (
-      <a class={cl} {...rest}>
-        {children}
-      </a>
-    )
-  }
+TopAppBar.Icon = (...args) => {
+  const [{ navigation, ...rest }, children] = hargs(args)
+  return classify(
+    navigation && 'mdc-top-app-bar__navigation-icon',
+    el('a.material-icons', rest, children)
+  )
 }
 
 export default TopAppBar

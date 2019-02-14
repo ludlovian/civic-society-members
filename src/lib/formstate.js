@@ -60,7 +60,7 @@ export class FieldState {
       let text = this.state().text || ''
       let error = ''
       this.validator.find(f => {
-        error = f(text)
+        error = f(text) || error
         return !!error
       })
       if (!error) {

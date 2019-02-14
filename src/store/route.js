@@ -60,6 +60,8 @@ function makeUrl ({ page, data }) {
       return `/member/${id}${buildQuery({ tab, edit })}`
     case 'newmember':
       return '/member/new'
+    case 'spreadsheet':
+      return '/spreadsheet'
     case 'login':
       return '/login'
     case 'logout':

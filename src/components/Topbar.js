@@ -1,10 +1,8 @@
 'use strict'
 
-import h from '../lib/hyperscript'
+import { el, vw } from '../domvm'
 
-import TopAppBar from './Material/TopAppBar'
-import Typography from './Material/Typography'
-import Icon from './Material/Icon'
+import { TopAppBar, Typography, Icon } from './Material'
 
 import MemberSearch from './MemberSearch'
 import MediaQuery from './MediaQuery'
@@ -28,95 +26,75 @@ const style = `
   }
 `
 
-export default function Topbar () {
-  let cleanup
-
+export default function Topbar (vm) {
   let hasSearch = views.route.state.map(s => s.page === 'home')
+  hasSearch.on(() => vm.redraw())
 
-  function willMount (vm) {
-    cleanup = hasSearch.on(() => vm.redraw())
+  return {
+    hooks: {
+      willUnmount: () => hasSearch.end(true)
+    },
+    render: (vm, { onNav }) =>
+      TopAppBar(
+        {
+          class: stylish(style),
+          fixed: true,
+          onNav
+        },
+        TopAppBar.Row(
+          TopAppBar.Section(
+            { alignStart: true },
+            TopAppBar.Icon({ navigation: true }, 'menu'),
+            AppTitle(),
+            IsTest(),
+            vw(EngineStatus)
+          ),
+          hasSearch() && vw(MemberSearch)
+        )
+      )
   }
-
-  function willUnmount (vm) {
-    cleanup()
-  }
-
-  function render (vm, { onNav }) {
-    const cl = stylish(style)
-    return (
-      <TopAppBar class={cl} fixed onNav={onNav}>
-        <TopAppBar.Row>
-          <TopAppBar.Section alignStart>
-            <TopAppBar.Icon navigation>menu</TopAppBar.Icon>
-            <AppTitle />
-            <IsTest />
-            <EngineStatus />
-          </TopAppBar.Section>
-          {hasSearch() && <MemberSearch />}
-        </TopAppBar.Row>
-      </TopAppBar>
-    )
-  }
-
-  return { render, hooks: { willMount, willUnmount } }
 }
 
-const AppTitle = {
-  template: () => (
-    <Typography class='title' headline5 onclick={actions.members.fetchAll}>
-      <MediaQuery match='(max-width:640px)'>
-        {matches => <span>{matches ? 'LCS' : 'Ludlow Civic Society'}</span>}
-      </MediaQuery>
-    </Typography>
+const AppTitle = () =>
+  Typography.Headline5(
+    { onclick: actions.members.fetchAll },
+    vw(MediaQuery, {
+      match: '(max-width:640px)',
+      render: matches => el('span', matches ? 'LCS' : 'Ludlow Civic Society')
+    })
   )
-}
 
-const IsTest = {
-  template: () =>
-    config.isTest && (
-      <Typography class='test' body1>
-        (test)
-      </Typography>
-    )
-}
+const IsTest = () =>
+  config.isTest && Typography.Body1({ class: 'test' }, '(test)')
 
 function toError () {
   actions.route.toPage('error')
 }
 
-function EngineStatus () {
-  let cleanup = []
+function EngineStatus (vm) {
+  let monitor = views.engine.status.map(() => vm.redraw())
 
   const states = {
     idle: [],
     busy: ['sync'],
     disconnected: ['cloud_off'],
-    error: ['error', toError]
+    error: ['error', toError, '/error']
   }
 
   return {
     hooks: {
-      didMount (vm) {
-        cleanup = [views.engine.status.on(() => vm.redraw())]
-      },
-      willUnmount () {
-        cleanup.forEach(f => f())
-      }
+      willUnmount: () => monitor.end(true)
     },
     render () {
-      let [icon, target] = states[views.engine.status()]
-      if (!icon) return <span />
-      icon = <Icon class='engine-status'>{icon}</Icon>
+      let [icon, target, href] = states[views.engine.status()]
+      if (!icon) return el('span')
+      icon = Icon({ class: 'engine-status' }, icon)
       if (!target) return icon
       const onclick = e => {
         target()
         return false
       }
-      return (
-        <a href={target} onclick={[onclick]}>
-          {icon}
-        </a>
-      )
+      return el('a', { href, onclick: [onclick] }, icon)
     }
   }
 }

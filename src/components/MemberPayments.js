@@ -1,16 +1,12 @@
 'use strict'
 
-import h from '../lib/hyperscript'
-
-import Typography from './Material/Typography'
-import Card from '../components/Material/Card'
-import Button from '../components/Material/Button'
-
+import { vw, el, classify } from '../domvm'
+import { Button, Card, Typography } from './Material'
 import { views, actions } from '../store'
 import dayjs from 'dayjs'
 import stylish from '../lib/stylish'
+import stream from '../lib/stream'
 import sortBy from '../lib/sortBy'
-
 import Field from './Field'
 import {
   FormState,
@@ -20,7 +16,7 @@ import {
   parsers
 } from '../lib/formstate'
 
-export default function MemberPayments () {
+export default function MemberPayments (vm, { member }) {
   const style = `
     :self { padding: 16px }
     table { width: 100%; border-collapse: collapse; }
@@ -37,8 +33,12 @@ export default function MemberPayments () {
     .buttons>.mdc-button { margin-left: 12px; }
   `
 
-  let cleanup = []
-  let form
+  const monitor = stream.combine(
+    () => vm.redraw(),
+    [views.route.state, views.members.members],
+    { skip: true }
+  )
+  const form = getForm(getPayments(member).pop())
 
   function onedit (member) {
     actions.route.updateData({ edit: true })
@@ -60,123 +60,97 @@ export default function MemberPayments () {
   }
 
   return {
-    init (vm, { member }) {
-      form = getForm(getPayments(member).pop())
-    },
     hooks: {
-      didMount (vm, { member }) {
-        cleanup = [
-          views.route.state.on(() => vm.redraw()),
-          views.members.members.on(() => vm.redraw())
-        ]
-      },
-      willUnmount () {
-        cleanup.forEach(f => f())
-      }
+      willUnmount: () => monitor.end(true)
     },
 
     render (vm, { member }) {
       const { edit } = views.route.state().data
       const payments = getPayments(member)
-      const cl = stylish(style)
-
-      return (
-        <div class={cl}>
-          <table>
-            <Heading />
-            <tbody>
-              {payments.length ? (
-                <PaymentRows payments={payments} />
-              ) : (
-                <NoPayments />
-              )}
-              {edit && <NewPayment form={form} />}
-            </tbody>
-          </table>
-
-          <Card.Actions class='buttons'>
-            {edit && (
-              <Button id='cancel' key='cancel' ripple onclick={[oncancel]}>
-                Cancel
-              </Button>
-            )}
-
-            <Button
-              id='edit'
-              key='edit'
-              ripple
-              raised={edit}
-              onclick={[edit ? onsave : onedit, member]}
-            >
-              Add
-            </Button>
-          </Card.Actions>
-        </div>
+      return classify(
+        stylish(style),
+        el(
+          'div',
+          el(
+            'table',
+            Heading(),
+            el(
+              'tbody',
+              payments.length ? PaymentRows({ payments }) : NoPayments(),
+              edit && NewPayment({ form })
+            )
+          ),
+          Card.Actions(
+            { class: 'buttons' },
+            edit &&
+              Button(
+                {
+                  id: 'cancel',
+                  _key: 'cancel',
+                  ripple: true,
+                  onclick: [oncancel]
+                },
+                'Cancel'
+              ),
+            Button(
+              {
+                id: 'edit',
+                _key: 'edit',
+                ripple: true,
+                raised: edit,
+                onclick: [edit ? onsave : onedit, member]
+              },
+              'Add'
+            )
+          )
+        )
       )
     }
   }
 }
 
-const Heading = {
-  template: () => (
-    <thead>
-      <tr>
-        {'Date|Amount|Paid by'.split('|').map(t => (
-          <th _key={t}>
-            <Typography headline6>{t}</Typography>
-          </th>
-        ))}
-      </tr>
-    </thead>
+const Heading = () =>
+  el(
+    'thead',
+    el(
+      'tr',
+      'Date|Amount|Paid by'
+        .split('|')
+        .map(t => el('th', { _key: t }, Typography.Headline6(t)))
+    )
   )
-}
 
-const NoPayments = {
-  template: () => (
-    <tr>
-      <td colspan='3'>
-        <Typography body1>No payments recorded</Typography>
-      </td>
-    </tr>
+const NoPayments = () =>
+  el('tr', el('td[colspan=3]', Typography.Body1('No payments recorded')))
+
+const PaymentRows = ({ payments }) =>
+  payments.map(pmt =>
+    el(
+      'tr.payment',
+      el('td', Typography.Body1(dayjs(pmt.date).format('Do MMM YY'))),
+      el('td', Typography.Body1(formatters.currency(pmt.amount))),
+      el('td', Typography.Body1(pmt.method))
+    )
   )
-}
 
-const PaymentRows = {
-  template: ({ payments }) =>
-    payments.map(pmt => (
-      <tr class='payment'>
-        <td>
-          <Typography body1>{dayjs(pmt.date).format('Do MMM YY')}</Typography>
-        </td>
-
-        <td>
-          <Typography body1>{formatters.currency(pmt.amount)}</Typography>
-        </td>
-
-        <td>
-          <Typography body1>{pmt.method}</Typography>
-        </td>
-      </tr>
-    ))
-}
-
-const NewPayment = {
-  template: ({ form }) => (
-    <tr class='new-payment'>
-      <td>
-        <Field label='Date' id='date' type='date' fieldState={form.$.date} />
-      </td>
-
-      <td>
-        <Field label='Amount' id='amount' fieldState={form.$.amount} />
-      </td>
-
-      <td>
-        <Field label='Paid by' id='method' fieldState={form.$.method} />
-      </td>
-    </tr>
+const NewPayment = ({ form }) =>
+  el(
+    'tr.new-payment',
+    el('td', [
+      vw(Field, {
+        label: 'Date',
+        id: 'date',
+        type: 'date',
+        fieldState: form.$.date
+      })
+    ]),
+    el('td', [
+      vw(Field, { label: 'Amount', id: 'amount', fieldState: form.$.amount })
+    ]),
+    el('td', [
+      vw(Field, { label: 'Paid by', id: 'method', fieldState: form.$.method })
+    ])
   )
-}
 
 function getForm (pmt) {
   return new FormState({

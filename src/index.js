@@ -1,7 +1,7 @@
 'use strict'
 
 import '@babel/polyfill'
-import { createView } from 'domvm/dist/nano/domvm.nano'
+import { createView } from './domvm'
 
 import { init, start } from './store'
 import App from './components/App'

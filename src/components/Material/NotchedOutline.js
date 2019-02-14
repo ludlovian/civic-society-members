@@ -1,38 +1,34 @@
 'use strict'
 
-import h from '../../lib/hyperscript'
-
+import { hargs, el } from '../../domvm'
 import { MDCNotchedOutline } from '@material/notched-outline'
 
-const NotchedOutline = {
-  template ({ children, ...rest }) {
-    const attrs = {
-      ...rest,
-      _key: rest._key || rest._id || 'mdcNotchedOutline',
-      _hooks: { didInsert, willRecycle, willRemove }
-    }
+const hooks = {
+  didInsert (node) {
+    node.data = node.data || {}
+    node.data.mdcNotchedOutline = new MDCNotchedOutline(node.el)
+  },
 
-    return (
-      <div class='mdc-notched-outline' {...attrs}>
-        <div class='mdc-notched-outline__leading' />
-        <div class='mdc-notched-outline__notch'>{children}</div>
-        <div class='mdc-notched-outline__trailing' />
-      </div>
-    )
+  willRecycle (prev, node) {
+    node.data = prev.data
+  },
+
+  willRemove (node) {
+    node.data.mdcNotchedOutline.destroy()
   }
 }
 
-function willRecycle (prev, node) {
-  node.data = prev.data
+export default function NotchedOutline (...args) {
+  const [rest, children] = hargs(args)
+  return el(
+    '.mdc-notched-outline',
+    {
+      ...rest,
+      _key: rest._key || rest._id || 'mdcNotchedOutline',
+      _hooks: hooks
+    },
+    el('.mdc-notched-outline__leading'),
+    el('.mdc-notched-outline__notch', children),
+    el('.mdc-notched-outline__trailing')
+  )
 }
-
-function didInsert (node) {
-  node.data = node.data || {}
-  node.data.mdcNotchedOutline = new MDCNotchedOutline(node.el)
-}
-
-function willRemove (node) {
-  node.data.mdcNotchedOutline.destroy()
-}
-
-export default NotchedOutline

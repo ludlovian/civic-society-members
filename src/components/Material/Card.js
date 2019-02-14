@@ -1,11 +1,10 @@
 'use strict'
 
-import h from '../../lib/hyperscript'
+import { h, el, hargs, classify } from '../../domvm'
 
 import { MDCRipple } from '@material/ripple'
-import Button from './Button'
+import { Button } from '.'
 
-import classnames from 'classnames'
 import memoize from '../../lib/memoize'
 
 const getHooks = memoize(ripple => ({
@@ -27,76 +26,35 @@ const getHooks = memoize(ripple => ({
   }
 }))
 
-const Card = {
-  template ({ children, class: cl, outlined, ripple, ...rest }) {
-    cl = classnames(cl, 'mdc-card', outlined && 'mdc-card--outlined')
-
-    const attrs = {
-      ...rest,
-      _key: rest._key || rest.id || 'mdcButton',
-      _hooks: getHooks(ripple)
-    }
-
-    return (
-      <div class={cl} {...attrs}>
-        {children}
-      </div>
+export default function Card (...args) {
+  const [{ outlined, ripple, ...rest }, children] = hargs(args)
+  return classify(
+    outlined && 'mdc-card--outlined',
+    el(
+      '.mdc-card',
+      {
+        ...rest,
+        _key: rest._key || rest.id || 'mdcButton',
+        _hooks: getHooks(ripple)
+      },
+      children
     )
-  }
+  )
 }
 
-Card.Actions = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(cl, 'mdc-card__actions')
+Card.Actions = (...args) => classify('mdc-card__actions', h('div', ...args))
 
-    return (
-      <div class={cl} {...rest}>
-        {children}
-      </div>
-    )
-  }
-}
+Card.ActionButton = (...args) =>
+  classify('mdc-card', 'mdc-card__action--button', Button(...args))
 
-Card.ActionButton = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(cl, 'mdc-card', 'mdc-card__action--button')
+Card.ActionIcons = (...args) =>
+  classify('mdc-card__action-icons', h('div', ...args))
 
-    return (
-      <Button class={cl} {...rest}>
-        {children}
-      </Button>
-    )
-  }
-}
-
-Card.ActionIcons = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(cl, 'mdc-card__action-icons')
-
-    return (
-      <div class={cl} {...rest}>
-        {children}
-      </div>
-    )
-  }
-}
-
-Card.ActionIcon = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(
-      cl,
-      'material-icons',
-      'mdc-icon-button',
-      'mdc-card__action',
-      'mdc-card__action--icon'
-    )
-
-    return (
-      <a class={cl} {...rest}>
-        {children}
-      </a>
-    )
-  }
-}
-
-export default Card
+Card.ActionIcon = (...args) =>
+  classify(
+    'material-icons',
+    'mdc-icon-button',
+    'mdc-card__action',
+    'mdc-card__action--icon',
+    h('a', ...args)
+  )

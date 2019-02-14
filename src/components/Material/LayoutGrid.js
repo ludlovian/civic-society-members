@@ -1,61 +1,30 @@
 'use strict'
 
-import h from '../../lib/hyperscript'
-import classnames from 'classnames'
+import { h, el, hargs, classify } from '../../domvm'
 
-const LayoutGrid = {
-  template ({ children, class: cl, noInner, ...rest }) {
-    cl = classnames(cl, 'mdc-layout-grid')
-
-    return (
-      <div class={cl} {...rest}>
-        {noInner ? children : <LayoutGrid.Inner>{children}</LayoutGrid.Inner>}
-      </div>
-    )
-  }
+export default function LayoutGrid (...args) {
+  const [{ noInner, ...rest }, children] = hargs(args)
+  return el(
+    '.mdc-layout-grid',
+    rest,
+    noInner ? children : LayoutGrid.Inner(children)
+  )
 }
 
-LayoutGrid.Inner = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(cl, 'mdc-layout-grid__inner')
+LayoutGrid.Inner = (...args) => h('.mdc-layout-grid__inner', ...args)
 
-    return (
-      <div class={cl} {...rest}>
-        {children}
-      </div>
-    )
-  }
+LayoutGrid.Cell = (...args) => {
+  const [
+    { cols, desktopCols, tabletCols, phoneCols, order, align, ...rest },
+    children
+  ] = hargs(args)
+  return classify(
+    cols && `mdc-layout-grid__cell--span-${cols}`,
+    desktopCols && `mdc-layout-grid__cell--span-${desktopCols}-desktop`,
+    tabletCols && `mdc-layout-grid__cell--span-${tabletCols}-tablet`,
+    phoneCols && `mdc-layout-grid__cell--span-${phoneCols}-phone`,
+    order && `mdc-layout-grid__cell--order-${order}`,
+    align && `mdc-layout-grid__cell--align-${align}`,
+    el('.mdc-layout-grid__cell', rest, children)
+  )
 }
-
-LayoutGrid.Cell = {
-  template ({
-    children,
-    class: cl,
-    cols,
-    desktopCols,
-    tabletCols,
-    phoneCols,
-    order,
-    align,
-    ...rest
-  }) {
-    cl = classnames(
-      cl,
-      'mdc-layout-grid__cell',
-      cols && `mdc-layout-grid__cell--span-${cols}`,
-      desktopCols && `mdc-layout-grid__cell--span-${desktopCols}-desktop`,
-      tabletCols && `mdc-layout-grid__cell--span-${tabletCols}-tablet`,
-      phoneCols && `mdc-layout-grid__cell--span-${phoneCols}-phone`,
-      order && `mdc-layout-grid__cell--order-${order}`,
-      align && `mdc-layout-grid__cell--align-${align}`
-    )
-
-    return (
-      <div class={cl} {...rest}>
-        {children}
-      </div>
-    )
-  }
-}
-
-export default LayoutGrid

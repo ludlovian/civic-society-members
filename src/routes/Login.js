@@ -1,11 +1,8 @@
 'use strict'
 
-import h from '../lib/hyperscript'
+import { el, vw, classify } from '../domvm'
 
-import Card from '../components/Material/Card'
-import Typography from '../components/Material/Typography'
-
-import classnames from 'classnames'
+import { Card, Typography } from '../components/Material'
 import stylish from '../lib/stylish'
 import { actions, views } from '../store'
 import { FormState, FieldState, validators } from '../lib/formstate'
@@ -33,7 +30,7 @@ export default function Login (vm) {
     })
   })
 
-  function onclick () {
+  function onclick (vm) {
     form.validate().then(isValid => {
       if (isValid) {
         vm.update({ active: true })
@@ -46,53 +43,64 @@ export default function Login (vm) {
   }
 
   return function render (vm, { active = false } = {}) {
-    const cl = classnames(stylish(style), 'scrim')
-    return (
-      <div class={cl}>
-        <Card class='card'>
-          <div class='header'>
-            <div>
-              <Typography headline5>Login</Typography>
-            </div>
-            <div>
-              <Typography body1>You must login to use the system</Typography>
-            </div>
-          </div>
-
-          <form class='form'>
-            <Field
-              class='field'
-              id='username'
-              label='Email address'
-              fieldState={form.$.username}
-              autofocus
-            />
-
-            <Field
-              class='field'
-              id='password'
-              label='Password'
-              fieldState={form.$.password}
-              type='password'
-            />
-
-            <Card.Actions class='buttons'>
-              <Card.ActionButton
-                primary
-                default
-                ripple
-                disabled={active}
-                onclick={[onclick]}
-              >
-                {active ? 'Logging in...' : 'Login'}
-              </Card.ActionButton>
-            </Card.Actions>
-          </form>
-        </Card>
-      </div>
+    return classify(
+      stylish(style),
+      el(
+        '.scrim',
+        Card(
+          { class: 'card' },
+          Header(),
+          el('form.form', [
+            ...LoginFields(form),
+            Buttons({ vm, onclick, active })
+          ])
+        )
+      )
     )
   }
 }
+
+const Header = () =>
+  el(
+    '.header',
+    el('div', Typography.Headline5('Login')),
+    el('div', Typography.Body1('You must login to use the system'))
+  )
+
+const LoginFields = form => [
+  vw(Field, {
+    class: 'field',
+    id: 'username',
+    label: 'Email address',
+    fieldState: form.$.username,
+    autofocus: true
+  }),
+
+  vw(Field, {
+    class: 'field',
+    id: 'password',
+    label: 'Password',
+    fieldState: form.$.password,
+    type: 'password'
+  })
+]
+
+const Buttons = ({ vm, active, onclick }) =>
+  classify(
+    'buttons',
+    Card.Actions(
+      Card.ActionButton(
+        {
+          primary: true,
+          default: true,
+          ripple: true,
+          disabled: active,
+          onclick: [onclick, vm]
+        },
+        active ? 'Logging in...' : 'Login'
+      )
+    )
+  )
 
 function doLogin (form) {
   return actions.auth

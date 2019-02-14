@@ -1,6 +1,7 @@
 'use strict'
 
-import h from '../lib/hyperscript'
+import { el, vw } from '../domvm'
+
 import Topbar from './Topbar'
 import Sidebar from './Sidebar'
 import Router from '../routes'
@@ -12,13 +13,11 @@ export default function App () {
     openSidebar(true)
   }
 
-  return (vm, data) => {
-    return (
-      <div id='app'>
-        <Sidebar open={openSidebar} />
-        <Topbar onNav={onNav} />
-        <Router />
-      </div>
-    )
+  return vm => {
+    return el('div', { id: 'app' }, [
+      vw(Sidebar, { open: openSidebar }),
+      vw(Topbar, { onNav }),
+      vw(Router)
+    ])
   }
 }

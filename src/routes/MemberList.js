@@ -1,13 +1,7 @@
 'use strict'
 
-import h from '../lib/hyperscript'
-
-import LayoutGrid from '../components/Material/LayoutGrid'
-import Card from '../components/Material/Card'
-import Typography from '../components/Material/Typography'
-import Icon from '../components/Material/Icon'
-
-import classnames from 'classnames'
+import { el, vw, classify } from '../domvm'
+import { LayoutGrid, Card, Typography, Icon } from '../components/Material'
 import stylish from '../lib/stylish'
 import stream from '../lib/stream'
 import { views, actions } from '../store'
@@ -27,17 +21,15 @@ export default function MemberList (vm) {
     .no-match { padding: 20px; }
     .loading { padding: 20px; }
   `
-  const monitor = stream.combine(() => vm.redraw(), [
-    views.members.members,
-    views.auth.signedIn,
-    views.route.state
-  ])
+  const monitor = stream.combine(
+    () => vm.redraw(),
+    [views.members.members, views.auth.signedIn, views.route.state],
+    { skip: true }
+  )
 
   return {
     hooks: {
-      willUnmount () {
-        monitor.end(true)
-      }
+      willUnmount: () => monitor.end(true)
     },
 
     render () {
@@ -48,127 +40,84 @@ export default function MemberList (vm) {
         .sort(sortBy(m => m.sortName))
       const loaded = views.members.loaded()
 
-      const cl = classnames(stylish(style), 'scrim')
-      return (
-        <div class={cl}>
-          {!loaded ? <Loading /> : <Null />}
-          {loaded && !members.length ? <NoMembers /> : <Null />}
-          {loaded && !!members.length ? (
-            <MediaQuery match='(min-width:1250px)'>
-              {isLarge => (
-                <MemberCards members={members} cols={isLarge ? 3 : 4} />
-              )}
-            </MediaQuery>
-          ) : (
-            <Null />
-          )}
-        </div>
+      return classify(
+        stylish(style),
+        el(
+          '.scrim',
+          !loaded ? Loading() : Null(),
+          loaded && !members.length ? NoMembers() : Null(),
+          loaded && !!members.length ? Members({ members }) : Null()
+        )
       )
     }
   }
 }
 
-const Null = { template: () => <div /> }
+const Members = ({ members }) =>
+  vw(MediaQuery, {
+    match: '(min-width:1250px)',
+    render: isLarge => MemberCards({ members, cols: isLarge ? 3 : 4 })
+  })
 
-const Loading = {
-  template: () => (
-    <div class='loading'>
-      <Typography headline6>Loading...</Typography>
-    </div>
+const Null = () => el('div')
+
+const Loading = () => el('.loading', Typography.Headline6('Loading...'))
+
+const NoMembers = () =>
+  el('.no-match', Typography.Body1('There are no members that match'))
+
+const MemberCards = ({ members, cols }) =>
+  LayoutGrid(
+    members.map(member => MemberCard({ key: member.id, member, cols }))
   )
-}
 
-const NoMembers = {
-  template: () => (
-    <div class='no-match'>
-      <Typography body1>There are no members that match</Typography>
-    </div>
-  )
-}
-
-const MemberCards = {
-  template: ({ members, cols }) => (
-    <LayoutGrid>
-      {members.map(member => (
-        <MemberCard key={member.id} member={member} cols={cols} />
-      ))}
-    </LayoutGrid>
-  )
-}
-
-const MemberCard = {
-  template ({ member, cols }) {
-    return (
-      <LayoutGrid.Cell cols={cols}>
-        <Card class='card'>
-          <CardHeader member={member} />
-          <div class='body'>
-            <IconsAndContact member={member} />
-            <Address member={member} />
-          </div>
-          <Card.Actions class='actions'>
-            <Card.ActionIcons>
-              <Card.ActionIcon
-                href={`/member/${member.id}`}
-                onclick={[toMember, member]}
-              >
-                more_horiz
-              </Card.ActionIcon>
-            </Card.ActionIcons>
-          </Card.Actions>
-        </Card>
-      </LayoutGrid.Cell>
+const MemberCard = ({ member, cols }) =>
+  LayoutGrid.Cell(
+    { cols },
+    Card(
+      { class: 'card' },
+      CardHeader({ member }),
+      el('.body', IconsAndContact({ member }), Address({ member })),
+      Card.Actions(
+        { class: 'actions' },
+        Card.ActionIcons(
+          Card.ActionIcon(
+            { href: `/member/${member.id}`, onclick: [toMember, member] },
+            'more_horiz'
+          )
+        )
+      )
     )
-  }
-}
+  )
 
 function toMember (member) {
   actions.route.toPage('member', { id: member.id })
   return false
 }
 
-const CardHeader = {
-  template: ({ member }) => (
-    <div class='header'>
-      <Typography headline6>{member.sortName}</Typography>
-    </div>
+const CardHeader = ({ member }) =>
+  el('.header', Typography.Headline6(member.sortName))
+
+const IconsAndContact = ({ member }) => {
+  let icons = [
+    Member.isLife(member) && 'favorite_border',
+    Member.isJoint(member) && 'people',
+    Member.isCorporate(member) && 'business_center'
+  ].filter(Boolean)
+  icons = icons.map(n => Icon(n))
+
+  let lines = breakLines(
+    [
+      icons,
+      member.tel && Typography.Body2({ class: 'contact' }, member.tel)
+    ].filter(Boolean)
   )
+  lines = [].concat(...lines)
+
+  return el('span.rhs', lines)
 }
 
-const IconsAndContact = {
-  template ({ member }) {
-    const icons = [
-      Member.isLife(member) && 'favorite_border',
-      Member.isJoint(member) && 'people',
-      Member.isCorporate(member) && 'business_center'
-    ]
-      .filter(Boolean)
-      .map(n => <Icon>{n}</Icon>)
-
-    let lines = breakLines(
-      [
-        icons,
-        member.tel && (
-          <Typography body2 class='contact'>
-            {member.tel}
-          </Typography>
-        )
-      ].filter(Boolean)
-    )
-    lines = [].concat(...lines)
-
-    return <span class='rhs'>{lines}</span>
-  }
-}
-
-const Address = {
-  template: ({ member }) => {
-    const lines = breakLines(member.address.split('\n'))
-    const ret = (
-      <Typography body2 class='address'>
-        {lines}
-      </Typography>
-    )
-    return ret
-  }
+const Address = ({ member }) => {
+  const lines = breakLines(member.address.split('\n'))
+  return Typography.Body2({ class: 'address' }, lines)
 }

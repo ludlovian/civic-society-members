@@ -1,6 +1,6 @@
 'use strict'
 
-import h from '../lib/hyperscript'
+import { el, vw } from '../domvm'
 
 import Logout from './Logout'
 import Login from './Login'
@@ -15,57 +15,43 @@ import { views, actions } from '../store'
 const PERMITTED_UNAUTH = ['login', 'logout', 'error', '404']
 const DISALLOWED_AUTH = ['login']
 
-export default function Router () {
-  function didMount (vm) {
-    vm.state = { monitor: views.route.state.map(() => vm.redraw()) }
-  }
-  function willUnmount (vm) {
-    vm.state.monitor.end(true)
-  }
-
-  function render (vm) {
-    const { page, data } = views.route.state()
-    const isSignedIn = views.auth.signedIn()
-
-    if (!isSignedIn && PERMITTED_UNAUTH.indexOf(page) === -1) {
-      actions.route.toPage('login', {}, true)
-      vm.redraw()
-      return <div />
-    }
-
-    if (isSignedIn && DISALLOWED_AUTH.indexOf(page) !== -1) {
-      actions.route.toPage('home', {}, true)
-      vm.redraw()
-      return <div />
-    }
-
-    const PageView = getView(page)
-    return (
-      <div class='mdc-top-app-bar--fixed-adjust mdc-theme--background'>
-        <PageView {...data} />
-      </div>
-    )
-  }
-  return { render, hooks: { didMount, willUnmount } }
+const PAGES = {
+  home: MemberList,
+  member: Member,
+  newmember: NewMember,
+  spreadsheet: Spreadsheet,
+  login: Login,
+  logout: Logout,
+  error: AppError
 }
 
-function getView (page) {
-  switch (page) {
-    case 'home':
-      return MemberList
-    case 'member':
-      return Member
-    case 'newmember':
-      return NewMember
-    case 'spreadsheet':
-      return Spreadsheet
-    case 'login':
-      return Login
-    case 'logout':
-      return Logout
-    case 'error':
-      return AppError
-    default:
-      return NotFound
+export default function Router (vm) {
+  const monitor = views.route.state.map(() => vm.redraw())
+
+  return {
+    hooks: {
+      willUmount: () => monitor.end(true)
+    },
+    render () {
+      const { page, data } = views.route.state()
+      const isSignedIn = views.auth.signedIn()
+
+      if (!isSignedIn && PERMITTED_UNAUTH.indexOf(page) === -1) {
+        actions.route.toPage('login', {}, true)
+        vm.redraw()
+        return el('div')
+      }
+
+      if (isSignedIn && DISALLOWED_AUTH.indexOf(page) !== -1) {
+        actions.route.toPage('home', {}, true)
+        vm.redraw()
+        return el('div')
+      }
+
+      return el(
+        '.mdc-top-app-bar--fixed-adjust.mdc-theme--background',
+        vw(PAGES[page] || NotFound, data)
+      )
+    }
   }
 }

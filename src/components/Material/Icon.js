@@ -1,16 +1,5 @@
 'use strict'
 
-import h from '../../lib/hyperscript'
-import classnames from 'classnames'
+import { h } from '../../domvm'
 
-const Icon = {
-  template ({ children, class: cl, ...rest }) {
-    cl = classnames(cl, 'material-icons')
-    return (
-      <i class={cl} {...rest}>
-        {children}
-      </i>
-    )
-  }
-}
-export default Icon
+export default (...args) => h('i.material-icons', ...args)

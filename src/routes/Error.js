@@ -1,11 +1,7 @@
 'use strict'
 
-import h from '../lib/hyperscript'
-
-import Card from '../components/Material/Card'
-import Typography from '../components/Material/Typography'
-
-import classnames from 'classnames'
+import { el, classify } from '../domvm'
+import { Card, Typography } from '../components/Material'
 import { actions, views } from '../store'
 import stylish from '../lib/stylish'
 
@@ -17,48 +13,51 @@ export default function AppError (vm) {
     .card .details { padding-bottom: 16px; overflow-x: auto; }
     .card .buttons { justify-content: flex-end; }
   `
-
-  let cleanup = views.engine.state.on(x => vm.redraw())
+  const monitor = views.engine.state.map(() => vm.redraw(), { skip: true })
 
   return {
-    willUnmount () {
-      cleanup()
+    hooks: {
+      willUnmount: () => monitor.end(true)
     },
 
     render () {
       const error = views.engine.state().error
-      const cl = classnames(stylish(style), 'scrim')
-
-      return (
-        <div class={cl}>
-          <Card class='card'>
-            <div class='header'>
-              <div>
-                <Typography headline5>Error</Typography>
-              </div>
-              <div>
-                <Typography body1>
-                  {error
-                    ? 'The following error has occured'
-                    : 'No error has occured'}
-                </Typography>
-              </div>
-            </div>
-
-            <pre class='details'>
-              {error && (error.stack || error.message || String(error))}
-            </pre>
-
-            {error && (
-              <Card.Actions class='buttons'>
-                <Card.ActionButton ripple onclick={actions.engine.clearError}>
-                  Clear
-                </Card.ActionButton>
-              </Card.Actions>
-            )}
-          </Card>
-        </div>
+      return classify(
+        stylish(style),
+        el(
+          '.scrim',
+          classify(
+            'card',
+            Card(Heading(), ErrorDetails(error), error && Buttons())
+          )
+        )
       )
     }
   }
 }
+
+const Heading = () => el('.header', Typography.Headline5('Error'))
+
+const ErrorDetails = error =>
+  el(
+    '.body',
+    el(
+      'div',
+      Typography.Body1(
+        error ? 'The following error has occured' : 'No error has occured'
+      )
+    ),
+    el('pre.details', error && (error.stack || error.message || String(error)))
+  )
+
+const Buttons = () =>
+  Card.Actions(
+    { class: 'buttons' },
+    Card.ActionButton(
+      {
+        ripple: true,
+        onclick: actions.engine.clearError
+      },
+      'Clear'
+    )
+  )

@@ -1,77 +1,68 @@
 'use strict'
 
-import h from '../lib/hyperscript'
-
-import TopAppBar from './Material/TopAppBar'
-
-import classnames from 'classnames'
+import { el, classify } from '../domvm'
+import { TopAppBar } from './Material'
 import stylish from '../lib/stylish'
 import { actions } from '../store'
 
-const style = `
-  .icon { padding-right: 20px; }
-
-  .text-input.mdc-text-field {
-    background-color: white;
-    height: 40px;
-  }
-
-  .text-input.mdc-text-field.expanded { max-width: 600px; }
-  .text-input.mdc-text-field.collapsed { max-width: 0.1px; }
-
-  .text-input.mdc-text-field>.mdc-text-field__input {
-    border-bottom: none;
-    padding-top: 6px;
-  }
-`
-
 export default function MemberSearch (vm) {
-  let expanded = false
-  let text = ''
+  vm.data = vm.data || { expanded: false, text: '' }
+  const style = `
+    .icon { padding-right: 20px; }
 
-  function onclick (vm, data) {
-    expanded = !expanded
-    if (expanded) {
+    .text-input.mdc-text-field {
+      background-color: white;
+      height: 40px;
+    }
+
+    .text-input.mdc-text-field.expanded { max-width: 600px; }
+    .text-input.mdc-text-field.collapsed { max-width: 0.1px; }
+
+    .text-input.mdc-text-field>.mdc-text-field__input {
+      border-bottom: none;
+      padding-top: 6px;
+    }
+  `
+
+  function onclick (vm) {
+    const data = { ...vm.data }
+    data.expanded = !data.expanded
+    if (data.expanded) {
       setTimeout(() => vm.refs.input.el.focus(), 20)
     }
-    vm.redraw()
+    vm.update(data)
     return false
   }
 
   function onsearch (vm, e) {
-    text = e.target.value
-    if (!text) expanded = false
+    const data = { ...vm.data }
+    data.text = e.target.value
+    if (!data.text) data.expanded = false
 
-    actions.route.updateData({ filter: text.toLowerCase() })
-    vm.redraw()
+    actions.route.updateData({ filter: data.text.toLowerCase() })
+    vm.update(data)
     return false
   }
 
-  return function render (vm) {
-    const cl = stylish(style)
-    const clInput = classnames(
-      'text-input',
-      'mdc-text-field',
-      expanded ? 'expanded' : 'collapsed'
-    )
-    return (
-      <TopAppBar.Section class={cl} alignEnd>
-        <TopAppBar.Icon class='icon' onclick={[onclick, vm]}>
-          search
-        </TopAppBar.Icon>
-
-        <div class={clInput}>
-          <input
-            _ref='input'
-            id='memberSearch'
-            class='mdc-text-field__input'
-            type='search'
-            placeholder='search'
-            value={text}
-            onsearch={[onsearch, vm]}
-          />
-        </div>
-      </TopAppBar.Section>
+  return function render (vm, { expanded, text }) {
+    return classify(
+      stylish(style),
+      TopAppBar.Section(
+        { alignEnd: true },
+        TopAppBar.Icon({ class: 'icon', onclick: [onclick, vm] }, 'search'),
+        el(
+          '.text-input.mdc-text-field',
+          { class: expanded ? 'expanded' : 'collapsed' },
+          el('input.mdc-text-field__input', {
+            _ref: 'input',
+            id: 'memberSearch',
+            type: 'search',
+            placeholder: 'search',
+            value: text,
+            onsearch: [onsearch, vm]
+          })
+        )
+      )
     )
   }
 }

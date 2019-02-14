@@ -1,12 +1,9 @@
 'use strict'
 
-import h from '../lib/hyperscript'
-
-import Typography from './Material/Typography'
-
+import { el, classify } from '../domvm'
+import { Typography } from './Material'
 import dayjs from 'dayjs'
 import advancedFormat from 'dayjs/plugin/advancedFormat'
-
 import stylish from '../lib/stylish'
 import sortBy from '../lib/sortBy'
 
@@ -24,58 +21,42 @@ export default function MemberFiles () {
   return {
     render (vm, { member }) {
       const files = member.files.slice().sort(sortBy(f => f.date))
-      const cl = stylish(style)
-
-      return (
-        <div class={cl}>
-          <table>
-            <TableHead />
-            <tbody>
-              {files.length ? <FilesList files={files} /> : <NoFiles />}
-            </tbody>
-          </table>
-        </div>
+      return classify(
+        stylish(style),
+        el(
+          'div',
+          el(
+            'table',
+            TableHead(),
+            el('tbody', files.length ? FilesList({ files }) : NoFiles())
+          )
+        )
       )
     }
   }
 }
-const NoFiles = {
-  template: () => (
-    <tr>
-      <td colspan='2'>
-        <Typography body1>No files recorded for this member</Typography>
-      </td>
-    </tr>
+
+const NoFiles = () =>
+  el(
+    'tr',
+    el(
+      'td',
+      { colspan: 2 },
+      Typography.Body1('No files recorded for this member')
+    )
   )
-}
 
-const FilesList = {
-  template: ({ files }) =>
-    files.map(f => (
-      <tr>
-        <td>
-          <Typography body1>{dayjs(f.date).format('Do MMM YY')}</Typography>
-        </td>
-
-        <td>
-          <a href={f.link}>
-            <Typography body1>{f.type}</Typography>
-          </a>
-        </td>
-      </tr>
-    ))
-}
-
-const TableHead = {
-  template: () => (
-    <thead>
-      <tr>
-        {'Date,File'.split(',').map(t => (
-          <th>
-            <Typography headline6>{t}</Typography>
-          </th>
-        ))}
-      </tr>
-    </thead>
+const FilesList = ({ files }) =>
+  files.map(f =>
+    el(
+      'tr',
+      el('td', Typography.Body1(dayjs(f.date).format('Do MMM YY'))),
+      el('td', el('a', { href: f.link }, Typography.Body1(f.type)))
+    )
   )
-}
+
+const TableHead = () =>
+  el(
+    'thead',
+    el('tr', 'Date,File'.split(',').map(t => el('th', Typography.Headline6(t))))
+  )

@@ -128,25 +128,32 @@ function _endStream (stream) {
   }
 }
 
-function combine (fn, streams) {
+function combine (fn, streams, opts = {}) {
   const s = _createDependentStream(streams, fn)
   const end = _createDependentStream(streams.map(s => s.end), TRUE)
   _addListener(end, s)
   s.end = end
   _addProto(s)
-  // initial value
-  s[kChanged] = streams.filter(s => s[kValue] !== UNSTARTED)
-  _deriveValue(s)
+  // if requested, set as ready
+  if (opts.ready) s[kReady] = true
+  if (!opts.skip) {
+    // set initial value
+    s[kChanged] = streams.filter(s => s[kValue] !== UNSTARTED)
+    _deriveValue(s)
+  }
   return s
 }
 
 function merge (...streams) {
-  const s = combine((...args) => {
-    const changed = args.pop()
-    const self = args.pop()
-    changed.forEach(s => self(s()))
-  }, streams)
-  s[kReady] = true
+  const s = combine(
+    (...args) => {
+      const changed = args.pop()
+      const self = args.pop()
+      changed.forEach(s => self(s()))
+    },
+    streams,
+    { ready: true, skip: false }
+  )
   return s
 }
 
@@ -161,12 +168,12 @@ const proto = s => ({
     return `stream(${v}${e})`
   },
 
-  map (fn) {
-    return combine(s => fn(s()), [s])
+  map (fn, opts) {
+    return combine(s => fn(s()), [s], opts)
   },
 
-  on (fn) {
-    const m = s.map(fn)
+  on (fn, opts) {
+    const m = s.map(fn, opts)
     return () => m.end()
   },
 

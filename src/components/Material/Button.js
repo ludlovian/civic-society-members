@@ -1,10 +1,7 @@
 'use strict'
 
-import h from '../../lib/hyperscript'
-
+import { el, hargs, classify } from '../../domvm'
 import { MDCRipple } from '@material/ripple'
-
-import classnames from 'classnames'
 import memoize from '../../lib/memoize'
 
 const getHooks = memoize(ripple => ({
@@ -26,42 +23,37 @@ const getHooks = memoize(ripple => ({
   }
 }))
 
-const Button = {
-  template ({
-    children,
-    class: cl,
-    ripple,
-    href,
-    dense,
-    raised,
-    unelevated,
-    outlined,
-    primary,
-    secondary,
-    ...rest
-  }) {
-    const El = href ? 'a' : 'button'
-    cl = classnames(cl, 'mdc-button', {
-      'mdc-button--dense': dense,
-      'mdc-button--raised': raised,
-      'mdc-button--unelevated': unelevated,
-      'mdc-button--outlined': outlined,
-      'mdc-theme--primary-bg': primary,
-      'mdc-theme--secondary-bg': secondary
-    })
-
-    const attrs = {
-      ...rest,
-      _key: rest._key || rest.id || 'mdcButton',
-      _hooks: getHooks(ripple)
-    }
-
-    return (
-      <El class={cl} {...attrs}>
-        <span class='mdc-button__label'>{children}</span>
-      </El>
+export default function Button (...args) {
+  const [
+    {
+      ripple,
+      href,
+      dense,
+      raised,
+      unelevated,
+      outlined,
+      primary,
+      secondary,
+      ...rest
+    },
+    children
+  ] = hargs(args)
+  return classify(
+    'mdc-button',
+    dense && 'mdc-button--dense',
+    raised && 'mdc-button--raised',
+    unelevated && 'mdc-button--unelevated',
+    outlined && 'mdc-button--outlined',
+    primary && 'mdc-theme--primary-bg',
+    secondary && 'mdc-theme--secondary-bg',
+    el(
+      href ? 'a' : 'button',
+      {
+        ...rest,
+        _key: rest._key || rest.id || 'mdcButton',
+        _hooks: getHooks(ripple)
+      },
+      children
     )
-  }
+  )
 }
-
-export default Button

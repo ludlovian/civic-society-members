@@ -1,11 +1,7 @@
 'use strict'
 
-import h from '../lib/hyperscript'
-
-import Card from '../components/Material/Card'
-import Typography from '../components/Material/Typography'
-
-import classnames from 'classnames'
+import { el, classify } from '../domvm'
+import { Card, Typography } from '../components/Material'
 import stylish from '../lib/stylish'
 import { views } from '../store'
 
@@ -18,28 +14,25 @@ export default function Spreadsheet () {
   `
   const url = views.auth.config().spreadsheetUrl
 
-  return () => (
-    <div class={classnames(stylish(style), 'scrim')}>
-      <Card class='card'>
-        <div class='header'>
-          <Typography headline5>Spreadsheet</Typography>
-        </div>
+  return () =>
+    classify(
+      stylish(style),
+      el(
+        '.scrim',
+        Card(
+          { class: 'card' },
+          el('.header', Typography.Headline5('Spreadsheet')),
 
-        <div class='body'>
-          <Typography body1>
-            The membership data is all stored in a Google spreadsheet. You can
-            access it via the following link
-          </Typography>
-          <br />
-          <ul>
-            <li>
-              <a href={url}>
-                <Typography body2>{url}</Typography>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </Card>
-    </div>
-  )
+          el(
+            '.body',
+            Typography.Body1(
+              'The membership data is all stored in a Google spreadsheet. ' +
+                'You can access it via the following link'
+            ),
+            el('br'),
+            el('ul', el('li', el('a', { href: url }, Typography.Body2(url))))
+          )
+        )
+      )
+    )
 }
