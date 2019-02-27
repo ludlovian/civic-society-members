@@ -15,15 +15,18 @@ export default {
 
   actions: ({ state, update, actions }) => {
     function storeCreds ({ username, token }) {
-      update({
-        username,
-        token,
-        loginTimestamp: Date.now()
-      })
+      update(
+        {
+          username,
+          token,
+          loginTimestamp: Date.now()
+        },
+        'auth:storeCreds'
+      )
     }
 
     function storeConfig ({ spreadsheet: spreadsheetId }) {
-      update({ spreadsheetId })
+      update({ spreadsheetId }, 'atuh:storeConfig')
     }
 
     function signIn (creds) {
@@ -39,21 +42,24 @@ export default {
 
     function signOut () {
       actions.members.clear()
-      update({
-        username: '',
-        token: '',
-        loginTimestamp: undefined,
-        signedOut: true
-      })
+      update(
+        {
+          username: '',
+          token: '',
+          loginTimestamp: undefined,
+          signedOut: true
+        },
+        'auth:signOut'
+      )
     }
 
     function init () {
       const data = loadFromLocal({ key: 'auth' })
-      update({ ...data, signedOut: false })
+      update({ ...data, signedOut: false }, 'auth:init')
     }
 
     function start () {
-      state.on(snap => {
+      state.subscribe(snap => {
         saveToLocal({ key: 'auth' }, snap)
       })
     }

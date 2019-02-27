@@ -1,16 +1,17 @@
 'use strict'
 
-import { el, vw, classify } from '../domvm'
+import { el, vw } from '../domvm'
 
-import { Card, Typography } from '../components/Material'
-import stylish from '../lib/stylish'
+import { Card, Typography } from 'domvm-material'
+import stylish from 'stylish'
 import { actions, views } from '../store'
-import { FormState, FieldState, validators } from '../lib/formstate'
+import { FormState, FieldState } from 'teme-formstate'
+import { validators } from '../lib/forms'
 import Field from '../components/Field'
 
 export default function Login (vm) {
-  const style = `
-    :self.scrim { padding: 16px; }
+  const style = stylish`
+    .:self.scrim { padding: 16px; }
     .card { padding: 16px; max-width: 400px; margin: auto; }
     .header { margin: 0 0 16px }
     .form { margin: 16px 0 16px; }
@@ -43,18 +44,16 @@ export default function Login (vm) {
   }
 
   return function render (vm, { active = false } = {}) {
-    return classify(
-      stylish(style),
-      el(
-        '.scrim',
-        Card(
-          { class: 'card' },
-          Header(),
-          el('form.form', [
-            ...LoginFields(form),
-            Buttons({ vm, onclick, active })
-          ])
-        )
+    return el(
+      '.scrim',
+      { class: style },
+      Card(
+        { class: 'card' },
+        Header(),
+        el('form.form', [
+          ...LoginFields(form),
+          Buttons({ vm, onclick, active })
+        ])
       )
     )
   }
@@ -72,7 +71,7 @@ const LoginFields = form => [
     class: 'field',
     id: 'username',
     label: 'Email address',
-    fieldState: form.$.username,
+    fieldState: form.fields.username,
     autofocus: true
   }),
 
@@ -80,33 +79,31 @@ const LoginFields = form => [
     class: 'field',
     id: 'password',
     label: 'Password',
-    fieldState: form.$.password,
+    fieldState: form.fields.password,
     type: 'password'
   })
 ]
 
 const Buttons = ({ vm, active, onclick }) =>
-  classify(
-    'buttons',
-    Card.Actions(
-      Card.ActionButton(
-        {
-          primary: true,
-          default: true,
-          ripple: true,
-          disabled: active,
-          onclick: [onclick, vm]
-        },
-        active ? 'Logging in...' : 'Login'
-      )
+  Card.Actions(
+    { class: 'buttons' },
+    Card.ActionButton(
+      {
+        primary: true,
+        default: true,
+        ripple: true,
+        disabled: active,
+        onclick: [onclick, vm]
+      },
+      active ? 'Logging in...' : 'Login'
     )
   )
 
 function doLogin (form) {
   return actions.auth
     .signIn({
-      username: form.$.username.state().value,
-      password: form.$.password.state().value
+      username: form.fields.username.state().value,
+      password: form.fields.password.state().value
     })
     .then(() => {
       if (views.auth.signedIn()) {

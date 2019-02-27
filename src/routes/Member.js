@@ -1,12 +1,12 @@
 'use strict'
 
-import { el, vw, classify } from '../domvm'
-import { Card, Typography, TabBar } from '../components/Material'
+import { el, vw } from '../domvm'
+import { Card, Typography, TabBar } from 'domvm-material'
 import MemberDetails from '../components/MemberDetails'
 import MemberFiles from '../components/MemberFiles'
 import MemberPayments from '../components/MemberPayments'
-import stylish from '../lib/stylish'
-import stream from '../lib/stream'
+import stylish from 'stylish'
+import teme from 'teme'
 import defer from '../lib/defer'
 import { views, actions } from '../store'
 
@@ -21,8 +21,8 @@ function tabFromRoute ({ data: { tab } = {} } = {}) {
 }
 
 export default function Member (vm) {
-  const style = `
-    :self.scrim { padding: 12px; }
+  const style = stylish`
+    .:self.scrim { padding: 12px; }
     .card { margin: auto; padding: 16px; max-width: 800px; }
   `
 
@@ -30,11 +30,8 @@ export default function Member (vm) {
   defer(actions.members.fetchFiles)
 
   const tab = views.route.state.map(tabFromRoute)
-  const monitor = stream.combine(
-    () => vm.redraw(),
-    [views.members.members, views.route.state],
-    { skip: true }
-  )
+  const monitor = teme.merge(views.members.members, views.route.state)
+  monitor.subscribe(() => vm.redraw())
 
   return {
     hooks: {
@@ -47,9 +44,10 @@ export default function Member (vm) {
     render (vm) {
       const id = views.route.state().data.id
       const member = views.members.member(id)
-      return classify(
-        stylish(style),
-        el('.scrim', member ? MemberCard({ member, tab }) : NoMemberCard())
+      return el(
+        '.scrim',
+        { class: style },
+        member ? MemberCard({ member, tab }) : NoMemberCard()
       )
     }
   }

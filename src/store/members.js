@@ -18,26 +18,32 @@ export default {
     // local store updates
     //
     function storeMembers (members) {
-      update({ members, loaded: Date.now() })
+      update({ members, loaded: Date.now() }, 'members:storeMembers')
     }
 
     function storeFiles (files) {
-      update({ files, filesLoaded: true })
+      update({ files, filesLoaded: true }, 'members:storeFiles')
     }
 
     function storeMember (member) {
-      update({
-        members: PS({}, { [member.id]: member })
-      })
+      update(
+        {
+          members: PS({}, { [member.id]: member })
+        },
+        'members:storeMember'
+      )
     }
 
     function clear () {
-      update({
-        members: {},
-        files: [],
-        loaded: 0,
-        filesLoaded: false
-      })
+      update(
+        {
+          members: {},
+          files: [],
+          loaded: 0,
+          filesLoaded: false
+        },
+        'members:clear'
+      )
     }
 
     //
@@ -117,20 +123,21 @@ export default {
         payments: [],
         history: []
       })
+      console.log(mbr)
       storeMember(mbr)
       return mbr
     }
 
     function init () {
       const data = loadFromLocal({ key: 'members' })
-      update({ ...data, filesLoaded: false })
+      update({ ...data, filesLoaded: false }, 'members:init')
     }
 
     function start () {
       if (views.auth.signedIn() && !views.members.loadedRecently()) {
         actions.members.fetchMembers()
       }
-      state.on(snap => {
+      state.subscribe(snap => {
         saveToLocal({ key: 'members' }, snap)
       })
     }

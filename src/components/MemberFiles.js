@@ -1,17 +1,17 @@
 'use strict'
 
-import { el, classify } from '../domvm'
-import { Typography } from './Material'
+import { el } from '../domvm'
+import { Typography } from 'domvm-material'
 import dayjs from 'dayjs'
 import advancedFormat from 'dayjs/plugin/advancedFormat'
-import stylish from '../lib/stylish'
+import stylish from 'stylish'
 import sortBy from '../lib/sortBy'
 
 dayjs.extend(advancedFormat)
 
 export default function MemberFiles () {
-  const style = `
-    :self { padding: 24px; }
+  const style = stylish`
+    .:self { padding: 24px; }
     table { width: 100%; border-collapse: collapse; }
     th { text-align: left; border-bottom: solid 2px; }
     td { padding-top: 10px }
@@ -21,15 +21,13 @@ export default function MemberFiles () {
   return {
     render (vm, { member }) {
       const files = member.files.slice().sort(sortBy(f => f.date))
-      return classify(
-        stylish(style),
+      return el(
+        'div',
+        { class: style },
         el(
-          'div',
-          el(
-            'table',
-            TableHead(),
-            el('tbody', files.length ? FilesList({ files }) : NoFiles())
-          )
+          'table',
+          TableHead(),
+          el('tbody', files.length ? FilesList({ files }) : NoFiles())
         )
       )
     }

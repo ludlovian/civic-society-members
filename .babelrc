@@ -3,7 +3,8 @@
     [
       "@babel/preset-env",
       {
-        "targets": "> 5%, not dead"
+        "targets": "> 5%, not dead",
+        "useBuiltins": "usage" 
       }
     ]
   ],

@@ -1,17 +1,19 @@
 'use strict'
 
-import { el, classify } from '../domvm'
-
-import { TextField, Select } from './Material'
-import stylish from '../lib/stylish'
+import { el } from '../domvm'
+import teme from 'teme'
+import classnames from 'classnames'
+import { TextField, Select } from 'domvm-material'
+import stylish from 'stylish'
 
 export default function Field (vm, { fieldState }) {
-  const style = `
-    :self>.mdc-text-field+.mdc-text-field-helper-text--validation-msg {
+  const style = stylish`
+    .:self>.mdc-text-field+.mdc-text-field-helper-text--validation-msg {
       color: red;
     }
   `
-  let monitor = fieldState.state.map(() => vm.redraw(), { skip: true })
+  let monitor = teme.merge(fieldState.state)
+  monitor.subscribe(() => vm.redraw())
 
   function onchange (e) {
     fieldState.text(e.target.value)
@@ -23,24 +25,22 @@ export default function Field (vm, { fieldState }) {
     },
 
     render (vm, { fieldState, ...rest }) {
-      return classify(
-        stylish(style),
-        TextField({
-          ...rest,
-          value: fieldState.state().text,
-          helperText: fieldState.state().error,
-          persistent: true,
-          validationMsg: true,
-          onchange
-        })
-      )
+      return TextField({
+        ...rest,
+        class: classnames(rest.class, style),
+        value: fieldState.state().text,
+        helperText: fieldState.state().error,
+        persistent: true,
+        validationMsg: true,
+        onchange
+      })
     }
   }
 }
 
 Field.Select = function FieldSelect (vm, { fieldState }) {
-  const style = `
-    :self>.mdc-select+.mdc-select-helper-text--validation-msg {
+  const style = stylish`
+    .:self>.mdc-select+.mdc-select-helper-text--validation-msg {
       color: red;
     }
   `
@@ -48,7 +48,8 @@ Field.Select = function FieldSelect (vm, { fieldState }) {
     fieldState.text(e.detail.value)
   }
 
-  let monitor = fieldState.state.map(() => vm.redraw(), { skip: true })
+  let monitor = teme.merge(fieldState.state)
+  monitor.subscribe(() => vm.redraw())
 
   return {
     hooks: {
@@ -72,18 +73,16 @@ Field.Select = function FieldSelect (vm, { fieldState }) {
         })
       }
 
-      return classify(
-        stylish(style),
-        Select(
-          {
-            ...rest,
-            helperText: fieldState.state().error,
-            persistent: true,
-            validationMsg: true,
-            onchange
-          },
-          options.map(({ text, ...rest }) => el('option', rest, text))
-        )
+      return Select(
+        {
+          ...rest,
+          class: classnames(rest.class, style),
+          helperText: fieldState.state().error,
+          persistent: true,
+          validationMsg: true,
+          onchange
+        },
+        options.map(({ text, ...rest }) => el('option', rest, text))
       )
     }
   }

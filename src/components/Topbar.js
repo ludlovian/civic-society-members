@@ -2,15 +2,16 @@
 
 import { el, vw } from '../domvm'
 
-import { TopAppBar, Typography, Icon } from './Material'
+import { TopAppBar, Typography, Icon } from 'domvm-material'
+import teme from 'teme'
 
 import MemberSearch from './MemberSearch'
 import MediaQuery from './MediaQuery'
 import { views, actions } from '../store'
-import stylish from '../lib/stylish'
+import stylish from 'stylish'
 import config from '../config'
 
-const style = `
+const style = stylish`
   .title {
     padding-left: 20px;
   }
@@ -28,7 +29,7 @@ const style = `
 
 export default function Topbar (vm) {
   let hasSearch = views.route.state.map(s => s.page === 'home')
-  hasSearch.on(() => vm.redraw())
+  hasSearch.subscribe(() => vm.redraw())
 
   return {
     hooks: {
@@ -37,7 +38,7 @@ export default function Topbar (vm) {
     render: (vm, { onNav }) =>
       TopAppBar(
         {
-          class: stylish(style),
+          class: style,
           fixed: true,
           onNav
         },
@@ -72,7 +73,8 @@ function toError () {
 }
 
 function EngineStatus (vm) {
-  let monitor = views.engine.status.map(() => vm.redraw())
+  let monitor = teme.merge(views.engine.status)
+  monitor.subscribe(() => vm.redraw())
 
   const states = {
     idle: [],

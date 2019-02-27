@@ -8,7 +8,7 @@ export default {
 
   actions: ({ state, views, update }) => {
     function toPage (page, data = {}, replace) {
-      update({ page, data })
+      update({ page, data }, 'route:toPage')
       setUrlFromState({ addPrefix: page !== '404', replace })
     }
 
@@ -29,7 +29,7 @@ export default {
 
     function start () {
       window.addEventListener('popstate', e => {
-        update(e.state)
+        update(e.state, 'route:popState')
       })
 
       const { page, data } = decodePath(window.location)

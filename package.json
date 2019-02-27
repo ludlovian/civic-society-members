@@ -8,7 +8,8 @@
     "prebuild": "rm -rf dist/* && cp -a src/assets/* dist/",
     "build": "parcel build --no-cache --public-url /civic-society-members/ src/index.html",
     "format": "prettier-standard \"src/**/*.js\"",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "deploy": "ghpages -p dist -r ludlovian/civic-society-members"
   },
   "eslintConfig": {
     "parser": "babel-eslint",
@@ -30,11 +31,11 @@
     "build/*"
   ],
   "devDependencies": {
-    "@babel/core": "^7.2.2",
+    "@babel/core": "^7.3.4",
     "@babel/plugin-transform-react-jsx": "^7.3.0",
-    "autoprefixer": "^9.4.7",
+    "autoprefixer": "^9.4.9",
     "babel-eslint": "^10.0.1",
-    "eslint": "^5.12.0",
+    "eslint": "^5.14.1",
     "eslint-config-standard": "^12.0.0",
     "eslint-config-standard-jsx": "^6.0.2",
     "eslint-plugin-import": "^2.16.0",
@@ -44,30 +45,22 @@
     "eslint-plugin-standard": "^4.0.0",
     "ghpages": "0.0.10",
     "parcel-bundler": "^1.11.0",
+    "parcel-plugin-sw-precache": "^1.0.4",
     "prettier-standard": "^9.1.1",
-    "sass": "^1.16.1"
+    "sass": "^1.17.2"
   },
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
-    "@material/button": "^0.43.0",
-    "@material/card": "^0.43.0",
-    "@material/drawer": "^0.43.0",
-    "@material/floating-label": "^0.43.0",
-    "@material/layout-grid": "^0.41.0",
-    "@material/list": "^0.43.0",
-    "@material/notched-outline": "^0.43.0",
-    "@material/ripple": "^0.43.0",
-    "@material/select": "^0.43.0",
-    "@material/tab-bar": "^0.43.0",
-    "@material/textfield": "^0.43.0",
-    "@material/top-app-bar": "^0.43.0",
-    "@material/typography": "^0.43.0",
     "classnames": "^2.2.6",
-    "dayjs": "^1.8.0",
+    "dayjs": "^1.8.8",
     "domvm": "^3.4.7",
+    "domvm-material": "github:ludlovian/domvm-material",
     "lodash": "^4.17.11",
     "lz-string": "^1.4.4",
     "p-timeout": "^2.0.1",
-    "patchinko": "^4.1.0"
+    "patchinko": "^4.1.0",
+    "stylish": "github:ludlovian/stylish",
+    "teme": "github:ludlovian/teme",
+    "teme-formstate": "github:ludlovian/teme-formstate"
   }
 }

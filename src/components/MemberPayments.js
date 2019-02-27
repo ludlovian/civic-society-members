@@ -1,24 +1,19 @@
 'use strict'
 
-import { vw, el, classify } from '../domvm'
-import { Button, Card, Typography } from './Material'
+import { vw, el } from '../domvm'
+import { Button, Card, Typography } from 'domvm-material'
 import { views, actions } from '../store'
 import dayjs from 'dayjs'
-import stylish from '../lib/stylish'
-import stream from '../lib/stream'
+import stylish from 'stylish'
+import teme from 'teme'
 import sortBy from '../lib/sortBy'
 import Field from './Field'
-import {
-  FormState,
-  FieldState,
-  validators,
-  formatters,
-  parsers
-} from '../lib/formstate'
+import { FormState, FieldState } from 'teme-formstate'
+import { validators, formatters, parsers } from '../lib/forms'
 
 export default function MemberPayments (vm, { member }) {
-  const style = `
-    :self { padding: 16px }
+  const style = stylish`
+    .:self { padding: 16px }
     table { width: 100%; border-collapse: collapse; }
     th {
       text-align: left;
@@ -33,11 +28,8 @@ export default function MemberPayments (vm, { member }) {
     .buttons>.mdc-button { margin-left: 12px; }
   `
 
-  const monitor = stream.combine(
-    () => vm.redraw(),
-    [views.route.state, views.members.members],
-    { skip: true }
-  )
+  const monitor = teme.merge(views.route.state, views.members.members)
+  monitor.subscribe(() => vm.redraw())
   const form = getForm(getPayments(member).pop())
 
   function onedit (member) {
@@ -67,41 +59,39 @@ export default function MemberPayments (vm, { member }) {
     render (vm, { member }) {
       const { edit } = views.route.state().data
       const payments = getPayments(member)
-      return classify(
-        stylish(style),
+      return el(
+        'div',
+        { class: style },
         el(
-          'div',
+          'table',
+          Heading(),
           el(
-            'table',
-            Heading(),
-            el(
-              'tbody',
-              payments.length ? PaymentRows({ payments }) : NoPayments(),
-              edit && NewPayment({ form })
-            )
-          ),
-          Card.Actions(
-            { class: 'buttons' },
-            edit &&
-              Button(
-                {
-                  id: 'cancel',
-                  _key: 'cancel',
-                  ripple: true,
-                  onclick: [oncancel]
-                },
-                'Cancel'
-              ),
+            'tbody',
+            payments.length ? PaymentRows({ payments }) : NoPayments(),
+            edit && NewPayment({ form })
+          )
+        ),
+        Card.Actions(
+          { class: 'buttons' },
+          edit &&
             Button(
               {
-                id: 'edit',
-                _key: 'edit',
+                id: 'cancel',
+                _key: 'cancel',
                 ripple: true,
-                raised: edit,
-                onclick: [edit ? onsave : onedit, member]
+                onclick: [oncancel]
               },
-              'Add'
-            )
+              'Cancel'
+            ),
+          Button(
+            {
+              id: 'edit',
+              _key: 'edit',
+              ripple: true,
+              raised: edit,
+              onclick: [edit ? onsave : onedit, member]
+            },
+            'Add'
           )
         )
       )
@@ -141,14 +131,22 @@ const NewPayment = ({ form }) =>
         label: 'Date',
         id: 'date',
         type: 'date',
-        fieldState: form.$.date
+        fieldState: form.fields.date
       })
     ]),
     el('td', [
-      vw(Field, { label: 'Amount', id: 'amount', fieldState: form.$.amount })
+      vw(Field, {
+        label: 'Amount',
+        id: 'amount',
+        fieldState: form.fields.amount
+      })
     ]),
     el('td', [
-      vw(Field, { label: 'Paid by', id: 'method', fieldState: form.$.method })
+      vw(Field, {
+        label: 'Paid by',
+        id: 'method',
+        fieldState: form.fields.method
+      })
     ])
   )
 

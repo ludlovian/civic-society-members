@@ -5,10 +5,10 @@ import { el, vw } from '../domvm'
 import Topbar from './Topbar'
 import Sidebar from './Sidebar'
 import Router from '../routes'
-import stream from '../lib/stream'
+import teme from 'teme'
 
 export default function App () {
-  let openSidebar = stream()
+  let openSidebar = teme(false)
   function onNav () {
     openSidebar(true)
   }

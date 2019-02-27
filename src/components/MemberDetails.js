@@ -1,22 +1,17 @@
 'use strict'
 
-import { el, classify, vw } from '../domvm'
-import { Card, Button } from '../components/Material'
+import { el, vw } from '../domvm'
+import { Card, Button } from 'domvm-material'
 import { views, actions } from '../store'
-import stylish from '../lib/stylish'
-import stream from '../lib/stream'
-import {
-  FormState,
-  FieldState,
-  validators,
-  formatters,
-  parsers
-} from '../lib/formstate'
+import stylish from 'stylish'
+import teme from 'teme'
+import { FormState, FieldState } from 'teme-formstate'
+import { validators, formatters, parsers } from '../lib/forms'
 import Field from '../components/Field'
 import schema from '../schema'
 
 export default function MemberDetails (vm, { member }) {
-  const style = `
+  const style = stylish`
     >form { padding-top: 20px; }
 
     .field>.mdc-text-field { display: flex; }
@@ -33,11 +28,8 @@ export default function MemberDetails (vm, { member }) {
     .buttons>.mdc-button { margin-left: 12px; }
   `
 
-  let monitor = stream.combine(
-    () => vm.redraw(),
-    [views.route.state, views.members.members],
-    { skip: true }
-  )
+  let monitor = teme.merge(views.route.state, views.members.members)
+  monitor.subscribe(() => vm.redraw())
 
   let form = getForm(member)
   window.form = form
@@ -70,13 +62,11 @@ export default function MemberDetails (vm, { member }) {
 
     render (vm, { member }) {
       const { edit } = views.route.state().data
-      return classify(
-        stylish(style),
-        el(
-          'div',
-          el('form', MemberFields({ form, edit })),
-          MemberButtons({ edit, member, onsave, oncancel, onedit })
-        )
+      return el(
+        'div',
+        { class: style },
+        el('form', MemberFields({ form, edit })),
+        MemberButtons({ edit, member, onsave, oncancel, onedit })
       )
     }
   }
@@ -87,14 +77,14 @@ const MemberFields = ({ form, edit }) => [
     class: 'field',
     id: 'sortName',
     label: 'Sort name',
-    fieldState: form.$.sortName,
+    fieldState: form.fields.sortName,
     disabled: !edit
   }),
   vw(Field, {
     class: 'field',
     id: 'address',
     label: 'Address',
-    fieldState: form.$.address,
+    fieldState: form.fields.address,
     type: 'textarea',
     rows: 5,
     disabled: !edit
@@ -103,21 +93,21 @@ const MemberFields = ({ form, edit }) => [
     class: 'field',
     id: 'tel',
     label: 'Telephone',
-    fieldState: form.$.tel,
+    fieldState: form.fields.tel,
     disabled: !edit
   }),
   vw(Field, {
     class: 'field',
     id: 'email',
     label: 'Email address',
-    fieldState: form.$.email,
+    fieldState: form.fields.email,
     disabled: !edit
   }),
   vw(Field.Select, {
     class: 'field',
     id: 'mtype',
     label: 'Membership type',
-    fieldState: form.$.type,
+    fieldState: form.fields.type,
     values: schema.member.type,
     disabled: !edit
   }),
@@ -125,7 +115,7 @@ const MemberFields = ({ form, edit }) => [
     class: 'field',
     id: 'notes',
     label: 'Notes',
-    fieldState: form.$.notes,
+    fieldState: form.fields.notes,
     type: 'textarea',
     rows: 3,
     disabled: !edit
@@ -134,7 +124,7 @@ const MemberFields = ({ form, edit }) => [
     class: 'field',
     id: 'postType',
     label: 'Postage',
-    fieldState: form.$.postType,
+    fieldState: form.fields.postType,
     values: schema.member.postType,
     disabled: !edit
   }),
@@ -142,7 +132,7 @@ const MemberFields = ({ form, edit }) => [
     class: 'field',
     id: 'giftAid',
     label: 'Gift Aid',
-    fieldState: form.$.giftAid,
+    fieldState: form.fields.giftAid,
     values: schema.member.giftAid,
     disabled: !edit
   }),
@@ -150,7 +140,7 @@ const MemberFields = ({ form, edit }) => [
     class: 'field',
     id: 'usualMethod',
     label: 'Pay by',
-    fieldState: form.$.usualMethod,
+    fieldState: form.fields.usualMethod,
     values: schema.member.usualMethod,
     disabled: !edit
   })

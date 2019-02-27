@@ -1,31 +1,32 @@
 'use strict'
 
-import { el, vw, classify } from '../domvm'
-import { LayoutGrid, Card, Typography, Icon } from '../components/Material'
-import stylish from '../lib/stylish'
-import stream from '../lib/stream'
+import { el, vw } from '../domvm'
+import { LayoutGrid, Card, Typography, Icon } from 'domvm-material'
+import stylish from 'stylish'
+import teme from 'teme'
 import { views, actions } from '../store'
 import MediaQuery from '../components/MediaQuery'
 import * as Member from '../store/member'
-import breakLines from '../lib/breakLines'
 import sortBy from '../lib/sortBy'
 
 export default function MemberList (vm) {
-  const style = `
+  const style = stylish`
     .card { max-width: 400px; padding: 8px; min-height: 200px; }
     .card .header { padding-bottom: 8px }
     .card .body { flex-grow: 1; }
     .card .rhs { float: right; text-align: right; }
     .card .address { font-size: 12px; }
     .card .contact { font-size: 12px; }
+    .card .icon { color: rgb(0,0,0,0.5); }
     .no-match { padding: 20px; }
     .loading { padding: 20px; }
   `
-  const monitor = stream.combine(
-    () => vm.redraw(),
-    [views.members.members, views.auth.signedIn, views.route.state],
-    { skip: true }
+  const monitor = teme.merge(
+    views.members.members,
+    views.auth.signedIn,
+    views.route.state
   )
+  monitor.subscribe(() => vm.redraw())
 
   return {
     hooks: {
@@ -40,14 +41,12 @@ export default function MemberList (vm) {
         .sort(sortBy(m => m.sortName))
       const loaded = views.members.loaded()
 
-      return classify(
-        stylish(style),
-        el(
-          '.scrim',
-          !loaded ? Loading() : Null(),
-          loaded && !members.length ? NoMembers() : Null(),
-          loaded && !!members.length ? Members({ members }) : Null()
-        )
+      return el(
+        '.scrim',
+        { class: style },
+        !loaded ? Loading() : Null(),
+        loaded && !members.length ? NoMembers() : Null(),
+        loaded && !!members.length ? Members({ members }) : Null()
       )
     }
   }
@@ -104,12 +103,18 @@ const IconsAndContact = ({ member }) => {
     Member.isJoint(member) && 'people',
     Member.isCorporate(member) && 'business_center'
   ].filter(Boolean)
-  icons = icons.map(n => Icon(n))
+  icons = icons.map(n => Icon({ class: 'icon' }, n))
 
   let lines = breakLines(
     [
-      icons,
-      member.tel && Typography.Body2({ class: 'contact' }, member.tel)
+      icons.length && icons,
+      member.tel && Typography.Body2({ class: 'contact' }, member.tel),
+      member.email &&
+        el(
+          'a',
+          { href: 'mailto:' + member.email },
+          Icon({ class: 'icon' }, 'email')
+        )
     ].filter(Boolean)
   )
   lines = [].concat(...lines)
@@ -120,4 +125,11 @@ const IconsAndContact = ({ member }) => {
 const Address = ({ member }) => {
   const lines = breakLines(member.address.split('\n'))
   return Typography.Body2({ class: 'address' }, lines)
+}
+
+function breakLines (lines) {
+  return Array.prototype.concat.apply(
+    [],
+    lines.map((line, i) => (i === 0 ? line : [el('br'), line]))
+  )
 }

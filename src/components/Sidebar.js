@@ -1,17 +1,14 @@
 'use strict'
 
-import { Drawer } from './Material'
+import { Drawer } from 'domvm-material'
 import { version } from '../../package.json'
-import stream from '../lib/stream'
+import teme from 'teme'
 import { views, actions } from '../store'
 import config from '../config'
 
 export default function Sidebar (vm) {
-  const monitor = stream.combine(
-    () => vm.redraw(),
-    [views.auth.signedIn, views.route.state],
-    { skip: true }
-  )
+  const monitor = teme.merge(views.auth.signedIn, views.route.state)
+  monitor.subscribe(() => vm.redraw())
 
   return {
     hooks: {

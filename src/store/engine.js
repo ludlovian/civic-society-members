@@ -11,10 +11,10 @@ export default {
 
   actions: ({ update }) => {
     function updateRunning (chg) {
-      update({ running: S(n => n + chg) })
+      update({ running: S(n => n + chg) }, 'engine:updateRunning')
     }
     function setError (error) {
-      update({ error })
+      update({ error }, 'engine:setError')
     }
 
     async function execute (fn) {
@@ -29,12 +29,12 @@ export default {
     }
 
     function start () {
-      function check () {
-        update({ connected: window.navigator.onLine })
+      function setOnline () {
+        update({ connected: window.navigator.onLine }, 'engine:setOnline')
       }
-      window.addEventListener('offline', check)
-      window.addEventListener('online', check)
-      check()
+      window.addEventListener('offline', setOnline)
+      window.addEventListener('online', setOnline)
+      setOnline()
     }
 
     return {
@@ -55,6 +55,6 @@ export default {
         return 'idle'
       })
       .dedupe(),
-    idle: state.when(s => !s.error && s.connected && s.running === 0)
+    idle: state.when(s => s && !s.error && s.connected && s.running === 0)
   })
 }

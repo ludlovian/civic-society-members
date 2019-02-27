@@ -1,13 +1,13 @@
 'use strict'
 
-import { el, classify } from '../domvm'
-import { TopAppBar } from './Material'
-import stylish from '../lib/stylish'
+import { el } from '../domvm'
+import { TopAppBar } from 'domvm-material'
+import stylish from 'stylish'
 import { actions } from '../store'
 
 export default function MemberSearch (vm) {
   vm.data = vm.data || { expanded: false, text: '' }
-  const style = `
+  const style = stylish`
     .icon { padding-right: 20px; }
 
     .text-input.mdc-text-field {
@@ -45,23 +45,20 @@ export default function MemberSearch (vm) {
   }
 
   return function render (vm, { expanded, text }) {
-    return classify(
-      stylish(style),
-      TopAppBar.Section(
-        { alignEnd: true },
-        TopAppBar.Icon({ class: 'icon', onclick: [onclick, vm] }, 'search'),
-        el(
-          '.text-input.mdc-text-field',
-          { class: expanded ? 'expanded' : 'collapsed' },
-          el('input.mdc-text-field__input', {
-            _ref: 'input',
-            id: 'memberSearch',
-            type: 'search',
-            placeholder: 'search',
-            value: text,
-            onsearch: [onsearch, vm]
-          })
-        )
+    return TopAppBar.Section(
+      { class: style, alignEnd: true },
+      TopAppBar.Icon({ class: 'icon', onclick: [onclick, vm] }, 'search'),
+      el(
+        '.text-input.mdc-text-field',
+        { class: expanded ? 'expanded' : 'collapsed' },
+        el('input.mdc-text-field__input', {
+          _ref: 'input',
+          id: 'memberSearch',
+          type: 'search',
+          placeholder: 'search',
+          value: text,
+          onsearch: [onsearch, vm]
+        })
       )
     )
   }

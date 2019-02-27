@@ -1,6 +1,7 @@
 'use strict'
 
 import { el, vw } from '../domvm'
+import teme from 'teme'
 
 import Logout from './Logout'
 import Login from './Login'
@@ -26,7 +27,8 @@ const PAGES = {
 }
 
 export default function Router (vm) {
-  const monitor = views.route.state.map(() => vm.redraw())
+  const monitor = teme.merge(views.route.state)
+  monitor.subscribe(() => vm.redraw())
 
   return {
     hooks: {
