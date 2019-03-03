@@ -5,12 +5,13 @@ import { Card, Typography, TabBar } from 'domvm-material'
 import MemberDetails from '../components/MemberDetails'
 import MemberFiles from '../components/MemberFiles'
 import MemberPayments from '../components/MemberPayments'
+import MemberHistory from '../components/MemberHistory'
 import stylish from 'stylish'
 import teme from 'teme'
 import defer from '../lib/defer'
 import { views, actions } from '../store'
 
-const TABS = 'Details Payments Files'.split(' ')
+const TABS = 'Details Payments Files History'.split(' ')
 
 function tabFromRoute ({ data: { tab } = {} } = {}) {
   tab = tab || TABS[0]
@@ -83,7 +84,8 @@ const MemberTabs = ({ tab, member }) => {
 const tabViews = {
   details: MemberDetails,
   payments: MemberPayments,
-  files: MemberFiles
+  files: MemberFiles,
+  history: MemberHistory
 }
 
 const SelectedTab = ({ tab, member }) => vw(tabViews[tab()], { member })
